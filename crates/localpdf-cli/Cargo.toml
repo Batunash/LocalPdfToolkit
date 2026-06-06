@@ -1,0 +1,29 @@
+[package]
+name = "localpdf-cli"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "localpdf"
+path = "src/main.rs"
+
+[dependencies]
+# Core library
+localpdf-core.path = "../localpdf-core"
+
+# CLI
+clap.workspace = true
+indicatif.workspace = true
+owo-colors.workspace = true
+comfy-table.workspace = true
+clap_complete.workspace = true
+human-panic.workspace = true
+
+# Serialization
+serde.workspace = true
+serde_json.workspace = true
+
+# Async
+tokio.workspace = true

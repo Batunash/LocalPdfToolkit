@@ -1,0 +1,100 @@
+# Rust/Cargo
+/target
+**/*.rs.bk
+*.pdb
+Cargo.lock
+
+# Debug
+**/debug/
+**/profile/
+
+# VS Code
+.vscode/
+*.code-workspace
+.swc/
+
+# JetBrains
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Windows
+Thumbs.db
+*.lnk
+.DS_Store
+
+# npm/yarn
+ui/node_modules/
+ui/package-lock.json
+ui/yarn.lock
+ui/.vite/
+ui/dist/
+ui/.turbo/
+
+# Tauri
+src-tauri/target/
+src-tauri/tauri-bundle/
+
+# Build artifacts
+*.dll
+*.so
+*.dylib
+*.exe
+*.msi
+*.appimage
+*.deb
+*.rpm
+
+# Environment
+.env
+.env.local
+*.env
+
+# Logs
+*.log
+logs/
+
+# Temp files
+*.tmp
+*.temp
+temp/
+
+# Coverage
+*.profraw
+*.profdata
+coverage/
+
+# Docs
+*.pdf
+!LICENSE
+!README.md
+
+# OS
+.DS_Store
+Thumbs.db
+
+# taplo ignore
+.taplo.toml
+
+# Benchmarking
+criterion/
+
+# Flutter (if used)
+**/.flutter
+**/flutter/
+**/.dart_tool/
+
+# NApiKey files
+*.k8s.yaml
+secrets/
+
+# CI
+.github/workflows/*.yml
+!.github/workflows/build.yml
+
+# Misc
+*.bak
+*~
+*.swp
+*.swo

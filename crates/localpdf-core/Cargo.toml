@@ -1,0 +1,58 @@
+[package]
+name = "localpdf-core"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+# PDF engines
+pdfium-render.workspace = true
+lopdf.workspace = true
+printpdf.workspace = true
+
+# Image processing
+image.workspace = true
+oxipng.workspace = true
+
+# OCR (commented out - requires leptonica/tesseract installation)
+# leptess.workspace = true
+
+# Office format parsing
+docx-rs.workspace = true
+calamine.workspace = true
+umya-spreadsheet.workspace = true
+quick-xml.workspace = true
+zip.workspace = true
+html5ever.workspace = true
+
+# Compression
+flate2.workspace = true
+
+# Parallelism
+rayon.workspace = true
+
+# Async & serialization
+tokio.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+
+# Error handling
+anyhow.workspace = true
+thiserror.workspace = true
+
+# Utilities
+tempfile.workspace = true
+uuid.workspace = true
+walkdir.workspace = true
+bytesize.workspace = true
+
+# Encryption
+aes.workspace = true
+cbc.workspace = true
+pbkdf2.workspace = true
+rand.workspace = true
+
+# Fonts
+fontdb.workspace = true
+rusttype.workspace = true
