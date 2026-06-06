@@ -3,7 +3,8 @@
 **/*.rs.bk
 *.pdb
 Cargo.lock
-
+LocalPdfToolkitSDD.md
+PHASE_1_COMPLETED.md
 # Debug
 **/debug/
 **/profile/
