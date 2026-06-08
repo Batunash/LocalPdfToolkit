@@ -3,10 +3,9 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::RwLock;
-use localpdf_core::TempDir;
+use localpdf_core::utils::TempDir;
 
 /// Active job handle
-#[derive(Clone)]
 pub struct JobHandle {
     pub id: String,
     pub status: RwLock<String>,

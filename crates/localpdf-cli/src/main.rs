@@ -10,7 +10,7 @@ fn main() -> Result<()> {
     human_panic::setup_panic!();
     let args = Cli::parse();
 
-    match args.command {
+    let result: Result<(), Box<dyn std::error::Error>> = match args.command {
         Commands::Merge(opts) => cli::run_merge(opts, args.verbose, args.quiet, args.json, args.overwrite),
         Commands::Split(opts) => cli::run_split(opts, args.verbose, args.quiet, args.json, args.overwrite),
         Commands::Remove(opts) => cli::run_remove(opts, args.verbose, args.quiet, args.json, args.overwrite),
@@ -27,5 +27,7 @@ fn main() -> Result<()> {
         Commands::Repair(opts) => cli::run_repair(opts, args.verbose, args.quiet, args.json, args.overwrite),
         Commands::Convert(opts) => cli::run_convert(opts, args.verbose, args.quiet, args.json, args.overwrite),
         Commands::Info(opts) => cli::run_info(opts, args.verbose, args.quiet, args.json),
-    }
+    };
+
+    result.map_err(|e| anyhow::anyhow!("{}", e))
 }

@@ -2,6 +2,7 @@
 
 use clap::{Parser, Subcommand, ValueEnum};
 use localpdf_core::*;
+use localpdf_core::tools;
 use std::path::PathBuf;
 use std::time::Instant;
 
@@ -399,7 +400,7 @@ pub fn run_merge(
         overwrite,
     };
 
-    let result = merge::run(&merge_opts, &|progress| {
+    let result = tools::merge::run(&merge_opts, &|progress| {
         if verbose && !quiet {
             println!("[{}] {}", progress.stage, progress.message);
         }
@@ -436,7 +437,7 @@ pub fn run_split(
         overwrite,
     };
 
-    let result = split::run(&split_opts, &|progress| {
+    let result = tools::split::run(&split_opts, &|progress| {
         if verbose && !quiet {
             println!("[{}] {}", progress.stage, progress.message);
         }
@@ -471,7 +472,7 @@ pub fn run_remove(
         overwrite,
     };
 
-    let result = remove_pages::run(&remove_opts, &|progress| {
+    let result = tools::remove_pages::run(&remove_opts, &|progress| {
         if verbose && !quiet {
             println!("[{}] {}", progress.stage, progress.message);
         }
@@ -506,7 +507,7 @@ pub fn run_extract(
         overwrite,
     };
 
-    let result = extract_pages::run(&extract_opts, &|progress| {
+    let result = tools::extract_pages::run(&extract_opts, &|progress| {
         if verbose && !quiet {
             println!("[{}] {}", progress.stage, progress.message);
         }
@@ -543,7 +544,7 @@ pub fn run_organize(
         overwrite,
     };
 
-    let result = organize::run(&organize_opts, &|progress| {
+    let result = tools::organize::run(&organize_opts, &|progress| {
         if verbose && !quiet {
             println!("[{}] {}", progress.stage, progress.message);
         }
@@ -580,7 +581,7 @@ pub fn run_compress(
         overwrite,
     };
 
-    let result = compress::run(&compress_opts, &|progress| {
+    let result = tools::compress::run(&compress_opts, &|progress| {
         if verbose && !quiet {
             println!("[{}] {}", progress.stage, progress.message);
         }
@@ -618,7 +619,7 @@ pub fn run_rotate(
         overwrite,
     };
 
-    let result = rotate::run(&rotate_opts, &|progress| {
+    let result = tools::rotate::run(&rotate_opts, &|progress| {
         if verbose && !quiet {
             println!("[{}] {}", progress.stage, progress.message);
         }
@@ -658,7 +659,7 @@ pub fn run_watermark(
         overwrite,
     };
 
-    let result = watermark::run(&watermark_opts, &|progress| {
+    let result = tools::watermark::run(&watermark_opts, &|progress| {
         if verbose && !quiet {
             println!("[{}] {}", progress.stage, progress.message);
         }
@@ -707,7 +708,7 @@ pub fn run_page_numbers(
         overwrite,
     };
 
-    let result = page_numbers::run(&page_num_opts, &|progress| {
+    let result = tools::page_numbers::run(&page_num_opts, &|progress| {
         if verbose && !quiet {
             println!("[{}] {}", progress.stage, progress.message);
         }
@@ -743,7 +744,7 @@ pub fn run_crop(
         overwrite,
     };
 
-    let result = crop::run(&crop_opts, &|progress| {
+    let result = tools::crop::run(&crop_opts, &|progress| {
         if verbose && !quiet {
             println!("[{}] {}", progress.stage, progress.message);
         }
@@ -779,7 +780,7 @@ pub fn run_ocr(
         overwrite,
     };
 
-    let result = ocr::run(&ocr_opts, &|progress| {
+    let result = tools::ocr::run(&ocr_opts, &|progress| {
         if verbose && !quiet {
             println!("[{}] {}", progress.stage, progress.message);
         }
@@ -811,7 +812,7 @@ pub fn run_protect(
         overwrite,
     };
 
-    let result = protect::run(&protect_opts, &|progress| {
+    let result = tools::protect::run(&protect_opts, &|progress| {
         if verbose && !quiet {
             println!("[{}] {}", progress.stage, progress.message);
         }
@@ -841,7 +842,7 @@ pub fn run_unlock(
         overwrite,
     };
 
-    let result = unlock::run(&unlock_opts, &|progress| {
+    let result = tools::unlock::run(&unlock_opts, &|progress| {
         if verbose && !quiet {
             println!("[{}] {}", progress.stage, progress.message);
         }
@@ -870,7 +871,7 @@ pub fn run_repair(
         overwrite,
     };
 
-    let result = repair::run(&repair_opts, &|progress| {
+    let result = tools::repair::run(&repair_opts, &|progress| {
         if verbose && !quiet {
             println!("[{}] {}", progress.stage, progress.message);
         }
@@ -922,7 +923,7 @@ pub fn run_convert(
         overwrite,
     };
 
-    let result = convert::run(&convert_opts, &|progress| {
+    let result = tools::convert::run(&convert_opts, &|progress| {
         if verbose && !quiet {
             println!("[{}] {}", progress.stage, progress.message);
         }

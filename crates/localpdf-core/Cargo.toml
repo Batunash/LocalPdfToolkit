@@ -6,8 +6,8 @@ authors.workspace = true
 license.workspace = true
 
 [dependencies]
-# PDF engines
-pdfium-render.workspace = true
+# PDF engines - using lopdf for core operations
+# pdfium-render commented out - see top-level Cargo.toml for setup instructions
 lopdf.workspace = true
 printpdf.workspace = true
 
@@ -40,6 +40,7 @@ serde_json.workspace = true
 # Error handling
 anyhow.workspace = true
 thiserror.workspace = true
+log.workspace = true
 
 # Utilities
 tempfile.workspace = true

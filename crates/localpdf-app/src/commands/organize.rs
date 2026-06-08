@@ -1,14 +1,17 @@
 //! Tauri commands for organize category tools
 
-use localpdf_core::tools::{run_merge, run_split, run_remove, run_extract, run_organize, run_compress};
-use localpdf_core::types::{MergeOpts, SplitOpts, SplitStrategy, PageRange, RemoveOpts, ExtractOpts, OrganizeOpts, CompressOpts, CompressionLevel, Progress};
+use localpdf_core::tools;
+use localpdf_core::types::{
+    MergeOpts, SplitOpts, SplitStrategy, PageRange, RemoveOpts, ExtractOpts,
+    OrganizeOpts, CompressOpts, CompressionLevel, Progress, JobOutput,
+};
 use std::sync::mpsc::channel;
 use std::path::PathBuf;
 use tauri::State;
 use crate::state::AppState;
 
 #[tauri::command]
-async fn pdf_merge(
+pub async fn pdf_merge(
     app_state: State<'_, AppState>,
     input_files: Vec<String>,
     output_path: String,
@@ -22,13 +25,13 @@ async fn pdf_merge(
         overwrite,
     };
 
-    let (tx, rx) = channel::<Progress>();
+    let (tx, _rx) = channel::<Progress>();
     let progress_cb = move |p: Progress| {
         let _ = tx.send(p);
     };
 
-    let result = tokio::task::spawn_blocking(move || {
-        run_merge(&opts, &progress_cb)
+    let result: std::result::Result<std::result::Result<JobOutput, localpdf_core::LpError>, tokio::task::JoinError> = tokio::task::spawn_blocking(move || {
+        tools::merge::run(&opts, &progress_cb)
     }).await;
 
     match result {
@@ -39,7 +42,7 @@ async fn pdf_merge(
 }
 
 #[tauri::command]
-async fn pdf_split(
+pub async fn pdf_split(
     app_state: State<'_, AppState>,
     input_file: String,
     output_dir: String,
@@ -51,11 +54,9 @@ async fn pdf_split(
     let temp_dir = app_state.create_temp_dir().map_err(|e| e.to_string())?;
     let _ = temp_dir;
 
+    let parsed_ranges: Option<Vec<PageRange>> = ranges.as_ref().and_then(|r| parse_page_ranges(r));
     let strategy = match mode.as_str() {
-        "by_ranges" => {
-            let parsed_ranges = ranges.and_then(|r| parse_ranges(&r));
-            SplitStrategy::ByRanges(parsed_ranges.unwrap_or_default())
-        }
+        "by_ranges" => SplitStrategy::ByRanges,
         "by_every" => SplitStrategy::ByEvery(n_pages.unwrap_or(1)),
         "by_size" => SplitStrategy::BySize(10 * 1024 * 1024), // 10MB default
         _ => SplitStrategy::ByEvery(1),
@@ -65,28 +66,28 @@ async fn pdf_split(
         input_file: PathBuf::from(input_file),
         output_dir: PathBuf::from(output_dir),
         strategy,
-        ranges: None,
+        ranges: parsed_ranges,
         overwrite,
     };
 
-    let (tx, rx) = channel::<Progress>();
+    let (tx, _rx) = channel::<Progress>();
     let progress_cb = move |p: Progress| {
         let _ = tx.send(p);
     };
 
-    let result = tokio::task::spawn_blocking(move || {
-        run_split(&opts, &progress_cb)
+    let result: std::result::Result<std::result::Result<Vec<JobOutput>, localpdf_core::LpError>, tokio::task::JoinError> = tokio::task::spawn_blocking(move || {
+        tools::split::run(&opts, &progress_cb)
     }).await;
 
     match result {
-        Ok(Ok(output)) => Ok(vec![output.output_path.to_string_lossy().to_string()]),
+        Ok(Ok(outputs)) => Ok(outputs.iter().map(|o| o.output_path.to_string_lossy().to_string()).collect()),
         Ok(Err(e)) => Err(e.to_string()),
         Err(e) => Err(format!("Task failed: {}", e)),
     }
 }
 
 #[tauri::command]
-async fn pdf_remove_pages(
+pub async fn pdf_remove_pages(
     app_state: State<'_, AppState>,
     input_file: String,
     output_path: String,
@@ -96,7 +97,7 @@ async fn pdf_remove_pages(
     let temp_dir = app_state.create_temp_dir().map_err(|e| e.to_string())?;
     let _ = temp_dir;
 
-    let pages = parse_ranges(&page_ranges).unwrap_or_default();
+    let pages = parse_page_numbers(&page_ranges);
     let opts = RemoveOpts {
         input_file: PathBuf::from(input_file),
         output_path: PathBuf::from(output_path),
@@ -104,13 +105,13 @@ async fn pdf_remove_pages(
         overwrite,
     };
 
-    let (tx, rx) = channel::<Progress>();
+    let (tx, _rx) = channel::<Progress>();
     let progress_cb = move |p: Progress| {
         let _ = tx.send(p);
     };
 
-    let result = tokio::task::spawn_blocking(move || {
-        run_remove(&opts, &progress_cb)
+    let result: std::result::Result<std::result::Result<JobOutput, localpdf_core::LpError>, tokio::task::JoinError> = tokio::task::spawn_blocking(move || {
+        tools::remove_pages::run(&opts, &progress_cb)
     }).await;
 
     match result {
@@ -121,7 +122,7 @@ async fn pdf_remove_pages(
 }
 
 #[tauri::command]
-async fn pdf_extract_pages(
+pub async fn pdf_extract_pages(
     app_state: State<'_, AppState>,
     input_file: String,
     output_path: String,
@@ -131,7 +132,7 @@ async fn pdf_extract_pages(
     let temp_dir = app_state.create_temp_dir().map_err(|e| e.to_string())?;
     let _ = temp_dir;
 
-    let pages = parse_ranges(&page_ranges).unwrap_or_default();
+    let pages = parse_page_numbers(&page_ranges);
     let opts = ExtractOpts {
         input_file: PathBuf::from(input_file),
         output_path: PathBuf::from(output_path),
@@ -139,13 +140,13 @@ async fn pdf_extract_pages(
         overwrite,
     };
 
-    let (tx, rx) = channel::<Progress>();
+    let (tx, _rx) = channel::<Progress>();
     let progress_cb = move |p: Progress| {
         let _ = tx.send(p);
     };
 
-    let result = tokio::task::spawn_blocking(move || {
-        run_extract(&opts, &progress_cb)
+    let result: std::result::Result<std::result::Result<JobOutput, localpdf_core::LpError>, tokio::task::JoinError> = tokio::task::spawn_blocking(move || {
+        tools::extract_pages::run(&opts, &progress_cb)
     }).await;
 
     match result {
@@ -156,7 +157,7 @@ async fn pdf_extract_pages(
 }
 
 #[tauri::command]
-async fn pdf_organize(
+pub async fn pdf_organize(
     app_state: State<'_, AppState>,
     input_file: String,
     output_path: String,
@@ -175,13 +176,13 @@ async fn pdf_organize(
         overwrite,
     };
 
-    let (tx, rx) = channel::<Progress>();
+    let (tx, _rx) = channel::<Progress>();
     let progress_cb = move |p: Progress| {
         let _ = tx.send(p);
     };
 
-    let result = tokio::task::spawn_blocking(move || {
-        run_organize(&opts, &progress_cb)
+    let result: std::result::Result<std::result::Result<JobOutput, localpdf_core::LpError>, tokio::task::JoinError> = tokio::task::spawn_blocking(move || {
+        tools::organize::run(&opts, &progress_cb)
     }).await;
 
     match result {
@@ -192,7 +193,7 @@ async fn pdf_organize(
 }
 
 #[tauri::command]
-async fn pdf_compress(
+pub async fn pdf_compress(
     app_state: State<'_, AppState>,
     input_file: String,
     output_path: String,
@@ -217,13 +218,13 @@ async fn pdf_compress(
         overwrite,
     };
 
-    let (tx, rx) = channel::<Progress>();
+    let (tx, _rx) = channel::<Progress>();
     let progress_cb = move |p: Progress| {
         let _ = tx.send(p);
     };
 
-    let result = tokio::task::spawn_blocking(move || {
-        run_compress(&opts, &progress_cb)
+    let result: std::result::Result<std::result::Result<JobOutput, localpdf_core::LpError>, tokio::task::JoinError> = tokio::task::spawn_blocking(move || {
+        tools::compress::run(&opts, &progress_cb)
     }).await;
 
     match result {
@@ -233,14 +234,34 @@ async fn pdf_compress(
     }
 }
 
-fn parse_ranges(s: &str) -> Option<Vec<u32>> {
-    let mut pages = Vec::new();
+/// Parse ranges string into Vec<PageRange> (e.g., "1-3,5,7-9" -> [PageRange{1,3}, PageRange{5,5}, PageRange{7,9}])
+fn parse_page_ranges(s: &str) -> Option<Vec<PageRange>> {
+    let mut ranges = Vec::new();
     for part in s.split(',') {
         let part = part.trim();
         if part.contains('-') {
             let bounds: Vec<&str> = part.split('-').collect();
             if bounds.len() == 2 {
                 if let (Ok(start), Ok(end)) = (bounds[0].trim().parse(), bounds[1].trim().parse()) {
+                    ranges.push(PageRange { start, end });
+                }
+            }
+        } else if let Ok(n) = part.parse() {
+            ranges.push(PageRange { start: n, end: n });
+        }
+    }
+    if ranges.is_empty() { None } else { Some(ranges) }
+}
+
+/// Parse ranges string into Vec<u32> of individual page numbers (e.g., "1-3,5" -> [1,2,3,5])
+fn parse_page_numbers(s: &str) -> Vec<u32> {
+    let mut pages = Vec::new();
+    for part in s.split(',') {
+        let part = part.trim();
+        if part.contains('-') {
+            let bounds: Vec<&str> = part.split('-').collect();
+            if bounds.len() == 2 {
+                if let (Ok(start), Ok(end)) = (bounds[0].trim().parse::<u32>(), bounds[1].trim().parse::<u32>()) {
                     pages.extend(start..=end);
                 }
             }
@@ -248,9 +269,5 @@ fn parse_ranges(s: &str) -> Option<Vec<u32>> {
             pages.push(n);
         }
     }
-    if pages.is_empty() {
-        None
-    } else {
-        Some(pages)
-    }
+    pages
 }

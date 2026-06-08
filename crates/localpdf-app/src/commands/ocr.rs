@@ -1,14 +1,14 @@
 //! Tauri commands for OCR and utility tools
 
-use localpdf_core::tools::{run_ocr, run_repair};
-use localpdf_core::types::{OcrOpts, RepairOpts, Progress};
+use localpdf_core::tools;
+use localpdf_core::types::{OcrOpts, RepairOpts, Progress, JobOutput};
 use std::sync::mpsc::channel;
 use std::path::PathBuf;
 use tauri::State;
 use crate::state::AppState;
 
 #[tauri::command]
-async fn pdf_ocr(
+pub async fn pdf_ocr(
     app_state: State<'_, AppState>,
     input_file: String,
     output_path: String,
@@ -32,13 +32,13 @@ async fn pdf_ocr(
         overwrite,
     };
 
-    let (tx, rx) = channel::<Progress>();
+    let (tx, _rx) = channel::<Progress>();
     let progress_cb = move |p: Progress| {
         let _ = tx.send(p);
     };
 
-    let result = tokio::task::spawn_blocking(move || {
-        run_ocr(&opts, &progress_cb)
+    let result: std::result::Result<std::result::Result<JobOutput, localpdf_core::LpError>, tokio::task::JoinError> = tokio::task::spawn_blocking(move || {
+        tools::ocr::run(&opts, &progress_cb)
     }).await;
 
     match result {
@@ -49,7 +49,7 @@ async fn pdf_ocr(
 }
 
 #[tauri::command]
-async fn pdf_repair(
+pub async fn pdf_repair(
     app_state: State<'_, AppState>,
     input_file: String,
     output_path: String,
@@ -64,13 +64,13 @@ async fn pdf_repair(
         overwrite,
     };
 
-    let (tx, rx) = channel::<Progress>();
+    let (tx, _rx) = channel::<Progress>();
     let progress_cb = move |p: Progress| {
         let _ = tx.send(p);
     };
 
-    let result = tokio::task::spawn_blocking(move || {
-        run_repair(&opts, &progress_cb)
+    let result: std::result::Result<std::result::Result<JobOutput, localpdf_core::LpError>, tokio::task::JoinError> = tokio::task::spawn_blocking(move || {
+        tools::repair::run(&opts, &progress_cb)
     }).await;
 
     match result {

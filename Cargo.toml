@@ -10,8 +10,11 @@ license = "MIT"
 repository = "https://github.com/okullubatuhan/localpdf"
 
 [workspace.dependencies]
-# PDF engines
-pdfium-render = { version = "0.8", features = ["static"] }
+# PDF engines - using lopdf for core operations, commented out until PDFium setup
+# pdfium-render requires PDFium binary to be installed; see README for setup instructions
+# pdfium-render = "0.9"
+
+# Prefer lopdf for PDF manipulation (pure Rust)
 lopdf = "0.34"
 printpdf = "0.7"
 
@@ -44,6 +47,7 @@ serde_json = "1"
 # Error handling
 anyhow = "1"
 thiserror = "1"
+log = "0.4"
 
 # Utilities
 tempfile = "3"

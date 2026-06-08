@@ -1,14 +1,14 @@
 //! Tauri commands for edit tools
 
-use localpdf_core::tools::{run_rotate, run_watermark, run_page_numbers, run_crop};
-use localpdf_core::types::{RotateOpts, RotationAngle, WatermarkOpts, WatermarkType, WatermarkPosition, PageNumOpts, PageNumPosition, PageNumFormat, CropOpts, CropMargins, CropUnit, Progress};
+use localpdf_core::tools;
+use localpdf_core::types::{RotateOpts, RotationAngle, WatermarkOpts, WatermarkType, WatermarkPosition, PageNumOpts, PageNumPosition, PageNumFormat, CropOpts, CropMargins, CropUnit, Progress, JobOutput};
 use std::sync::mpsc::channel;
 use std::path::PathBuf;
 use tauri::State;
 use crate::state::AppState;
 
 #[tauri::command]
-async fn pdf_rotate(
+pub async fn pdf_rotate(
     app_state: State<'_, AppState>,
     input_file: String,
     output_path: String,
@@ -34,13 +34,13 @@ async fn pdf_rotate(
         overwrite,
     };
 
-    let (tx, rx) = channel::<Progress>();
+    let (tx, _rx) = channel::<Progress>();
     let progress_cb = move |p: Progress| {
         let _ = tx.send(p);
     };
 
-    let result = tokio::task::spawn_blocking(move || {
-        run_rotate(&opts, &progress_cb)
+    let result: std::result::Result<std::result::Result<JobOutput, localpdf_core::LpError>, tokio::task::JoinError> = tokio::task::spawn_blocking(move || {
+        tools::rotate::run(&opts, &progress_cb)
     }).await;
 
     match result {
@@ -51,14 +51,14 @@ async fn pdf_rotate(
 }
 
 #[tauri::command]
-async fn pdf_watermark(
+pub async fn pdf_watermark(
     app_state: State<'_, AppState>,
     input_file: String,
     output_path: String,
     text: String,
     position: String,
     opacity: f32,
-    angle: Option<f32>,
+    _angle: Option<f32>,
     font_size: Option<f32>,
     color: Option<String>,
     overwrite: bool,
@@ -85,13 +85,13 @@ async fn pdf_watermark(
         overwrite,
     };
 
-    let (tx, rx) = channel::<Progress>();
+    let (tx, _rx) = channel::<Progress>();
     let progress_cb = move |p: Progress| {
         let _ = tx.send(p);
     };
 
-    let result = tokio::task::spawn_blocking(move || {
-        run_watermark(&opts, &progress_cb)
+    let result: std::result::Result<std::result::Result<JobOutput, localpdf_core::LpError>, tokio::task::JoinError> = tokio::task::spawn_blocking(move || {
+        tools::watermark::run(&opts, &progress_cb)
     }).await;
 
     match result {
@@ -102,13 +102,13 @@ async fn pdf_watermark(
 }
 
 #[tauri::command]
-async fn pdf_page_numbers(
+pub async fn pdf_page_numbers(
     app_state: State<'_, AppState>,
     input_file: String,
     output_path: String,
     position: String,
     format: String,
-    start_number: Option<u32>,
+    _start_number: Option<u32>,
     font_size: Option<f32>,
     overwrite: bool,
 ) -> Result<String, String> {
@@ -141,13 +141,13 @@ async fn pdf_page_numbers(
         overwrite,
     };
 
-    let (tx, rx) = channel::<Progress>();
+    let (tx, _rx) = channel::<Progress>();
     let progress_cb = move |p: Progress| {
         let _ = tx.send(p);
     };
 
-    let result = tokio::task::spawn_blocking(move || {
-        run_page_numbers(&opts, &progress_cb)
+    let result: std::result::Result<std::result::Result<JobOutput, localpdf_core::LpError>, tokio::task::JoinError> = tokio::task::spawn_blocking(move || {
+        tools::page_numbers::run(&opts, &progress_cb)
     }).await;
 
     match result {
@@ -158,7 +158,7 @@ async fn pdf_page_numbers(
 }
 
 #[tauri::command]
-async fn pdf_crop(
+pub async fn pdf_crop(
     app_state: State<'_, AppState>,
     input_file: String,
     output_path: String,
@@ -190,13 +190,13 @@ async fn pdf_crop(
         overwrite,
     };
 
-    let (tx, rx) = channel::<Progress>();
+    let (tx, _rx) = channel::<Progress>();
     let progress_cb = move |p: Progress| {
         let _ = tx.send(p);
     };
 
-    let result = tokio::task::spawn_blocking(move || {
-        run_crop(&opts, &progress_cb)
+    let result: std::result::Result<std::result::Result<JobOutput, localpdf_core::LpError>, tokio::task::JoinError> = tokio::task::spawn_blocking(move || {
+        tools::crop::run(&opts, &progress_cb)
     }).await;
 
     match result {

@@ -46,8 +46,11 @@ pub fn validate_output_path(path: &Path, overwrite: bool) -> Result<PathBuf, LpE
     }
 
     path.canonicalize()
-        .or_else(|_| Ok(path.to_path_buf()))
-        .map_err(|e| LpError::pdf_corrupt(format!("Invalid output path: {}", e)))
+        .or_else(|e: std::io::Error| -> Result<PathBuf, LpError> {
+            let _ = e;
+            Ok(path.to_path_buf())
+        })
+        .map_err(|e| e)
 }
 
 /// Check file size is within acceptable limits
@@ -68,7 +71,7 @@ pub fn check_file_size(path: &Path, max_bytes: u64) -> Result<u64, LpError> {
 
 /// Check available disk space
 pub fn check_disk_space(path: &Path, required_bytes: u64) -> Result<(), LpError> {
-    if let Some(parent) = path.parent().or_else(|| Some(path)) {
+    if path.parent().is_some() || path.exists() {
         #[cfg(unix)]
         {
             use std::os::unix::fs::MetadataExt;

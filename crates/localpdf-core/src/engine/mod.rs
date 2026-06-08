@@ -1,9 +1,9 @@
 //! PDF processing engine wrappers
 
-pub mod pdfium;
-pub mod lopdf;
-pub mod image;
+pub mod pdfium;  // Now using lopdf implementation
+pub mod lopdf;   // Low-level operations
+pub mod image;   // Image processing
 
-pub use pdfium::PdfiumEngine;
+pub use pdfium::LoPdfEngine;
 pub use lopdf::LoPdfHelper;
 pub use image::ImageHelper;

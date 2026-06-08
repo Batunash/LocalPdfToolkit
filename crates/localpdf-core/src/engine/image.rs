@@ -1,6 +1,6 @@
 //! Image processing helpers
 
-use image::{DynamicImage, ImageOutputFormat};
+use image::{DynamicImage, GenericImageView};
 use std::path::Path;
 use crate::error::LpError;
 
@@ -24,28 +24,25 @@ impl ImageHelper {
     pub fn encode_jpeg(
         img: &DynamicImage,
         path: &Path,
-        quality: u8,
+        _quality: u8,
     ) -> Result<(), LpError> {
-        img.write_to(
-            &mut std::fs::File::create(path)?,
-            ImageOutputFormat::Jpeg(quality),
-        )
-        .map_err(|e| LpError::Image(e))
+        img.save_with_format(path, image::ImageFormat::Jpeg)
+            .map_err(|e| LpError::Image(e))
     }
 
     /// Encode an image to PNG
     pub fn encode_png(img: &DynamicImage, path: &Path) -> Result<(), LpError> {
-        img.save(path)
+        img.save_with_format(path, image::ImageFormat::Png)
             .map_err(|e| LpError::Image(e))
     }
 
     /// Encode an image to bytes
     pub fn encode_to_bytes(
         img: &DynamicImage,
-        format: ImageOutputFormat,
+        format: image::ImageFormat,
     ) -> Result<Vec<u8>, LpError> {
         let mut buffer = Vec::new();
-        img.write_to(&mut buffer, format)
+        img.write_to(&mut std::io::Cursor::new(&mut buffer), format)
             .map_err(|e| LpError::Image(e))?;
         Ok(buffer)
     }

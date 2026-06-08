@@ -1,14 +1,14 @@
 //! Tauri commands for security tools
 
-use localpdf_core::tools::{run_protect, run_unlock};
-use localpdf_core::types::{ProtectOpts, UnlockOpts, EncryptionPermissions, Progress};
+use localpdf_core::tools;
+use localpdf_core::types::{ProtectOpts, UnlockOpts, EncryptionPermissions, Progress, JobOutput};
 use std::sync::mpsc::channel;
 use std::path::PathBuf;
 use tauri::State;
 use crate::state::AppState;
 
 #[tauri::command]
-async fn pdf_protect(
+pub async fn pdf_protect(
     app_state: State<'_, AppState>,
     input_file: String,
     output_path: String,
@@ -33,19 +33,19 @@ async fn pdf_protect(
     let opts = ProtectOpts {
         input_file: PathBuf::from(input_file),
         output_path: PathBuf::from(output_path),
-        user_password,
-        owner_password: owner_password.or(Some(user_password.clone())),
+        user_password: user_password.clone(),
+        owner_password: owner_password.or(Some(user_password)),
         permissions,
         overwrite,
     };
 
-    let (tx, rx) = channel::<Progress>();
+    let (tx, _rx) = channel::<Progress>();
     let progress_cb = move |p: Progress| {
         let _ = tx.send(p);
     };
 
-    let result = tokio::task::spawn_blocking(move || {
-        run_protect(&opts, &progress_cb)
+    let result: std::result::Result<std::result::Result<JobOutput, localpdf_core::LpError>, tokio::task::JoinError> = tokio::task::spawn_blocking(move || {
+        tools::protect::run(&opts, &progress_cb)
     }).await;
 
     match result {
@@ -56,7 +56,7 @@ async fn pdf_protect(
 }
 
 #[tauri::command]
-async fn pdf_unlock(
+pub async fn pdf_unlock(
     app_state: State<'_, AppState>,
     input_file: String,
     output_path: String,
@@ -73,13 +73,13 @@ async fn pdf_unlock(
         overwrite,
     };
 
-    let (tx, rx) = channel::<Progress>();
+    let (tx, _rx) = channel::<Progress>();
     let progress_cb = move |p: Progress| {
         let _ = tx.send(p);
     };
 
-    let result = tokio::task::spawn_blocking(move || {
-        run_unlock(&opts, &progress_cb)
+    let result: std::result::Result<std::result::Result<JobOutput, localpdf_core::LpError>, tokio::task::JoinError> = tokio::task::spawn_blocking(move || {
+        tools::unlock::run(&opts, &progress_cb)
     }).await;
 
     match result {

@@ -5,13 +5,13 @@ use tauri::State;
 use crate::state::AppState;
 
 #[tauri::command]
-async fn get_temp_dir(app_state: State<'_, AppState>) -> Result<String, String> {
+pub async fn get_temp_dir(app_state: State<'_, AppState>) -> Result<String, String> {
     let temp_dir = app_state.create_temp_dir().map_err(|e| e.to_string())?;
     Ok(temp_dir.to_string_lossy().to_string())
 }
 
 #[tauri::command]
-async fn clean_temp(app_state: State<'_, AppState>) -> Result<u64, String> {
+pub async fn clean_temp(app_state: State<'_, AppState>) -> Result<u64, String> {
     let temp_guard = app_state.temp_dir.read().map_err(|e| e.to_string())?;
     if let Some(ref temp) = *temp_guard {
         let path = temp.path().to_path_buf();
@@ -37,6 +37,6 @@ fn count_entries(path: &PathBuf) -> u64 {
 }
 
 #[tauri::command]
-fn app_version() -> String {
+pub fn app_version() -> String {
     env!("CARGO_PKG_VERSION").to_string()
 }
