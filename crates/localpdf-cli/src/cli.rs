@@ -420,7 +420,7 @@ pub fn run_split(
         PathBuf::from("split_output")
     });
 
-    let strategy = if let Some(ranges_str) = opts.ranges {
+    let strategy = if let Some(_ranges_str) = opts.ranges {
         // Parse ranges - simplified implementation
         SplitStrategy::ByRanges
     } else if let Some(n) = opts.every {
@@ -936,16 +936,51 @@ pub fn run_info(
     opts: InfoOptions,
     verbose: bool,
     quiet: bool,
-    json_output: bool,
+    _json_output: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let start = Instant::now();
 
-    let result = if !quiet {
-        println!("Info for: {:?}", opts.input_file);
-        // Full implementation would read PDF metadata here
-        Ok(())
-    } else {
-        Ok(())
+    // Get PDF info using the core library
+    let info_result = localpdf_core::get_pdf_info(&opts.input_file);
+
+    let result = match info_result {
+        Ok(info) => {
+            if !quiet {
+                println!("Info for: {:?}", opts.input_file);
+                println!();
+                println!("File Size:      {}", info.file_size_formatted);
+                println!("Pages:          {}", info.page_count);
+                println!("PDF Version:    {}", info.pdf_version);
+                println!("Encrypted:      {}", if info.encrypted { "Yes" } else { "No" });
+
+                // Show page sizes
+                if !info.page_sizes.is_empty() {
+                    if info.page_sizes.len() == 1 {
+                        let size = &info.page_sizes[0];
+                        println!("Page Size:      {:.0} x {:.0} {}", size.width, size.height, size.unit);
+                    } else {
+                        println!("Page Sizes:     {} pages", info.page_sizes.len());
+                    }
+                }
+
+                // Show metadata if available
+                if let Some(ref creator) = info.creator {
+                    println!("Creator:        {}", creator);
+                }
+                if let Some(ref producer) = info.producer {
+                    println!("Producer:       {}", producer);
+                }
+
+                println!();
+            }
+            Ok(())
+        }
+        Err(e) => {
+            if !quiet {
+                eprintln!("Error reading PDF: {}", e);
+            }
+            Err(e.into())
+        }
     };
 
     let elapsed = start.elapsed();

@@ -8,7 +8,9 @@ PHASE_1_COMPLETED.md
 # Debug
 **/debug/
 **/profile/
-
+test-assets/
+create_test_pdfs.py
+errors.md
 # VS Code
 .vscode/
 *.code-workspace

@@ -6,6 +6,7 @@ use std::sync::RwLock;
 use localpdf_core::utils::TempDir;
 
 /// Active job handle
+#[allow(dead_code)]
 pub struct JobHandle {
     pub id: String,
     pub status: RwLock<String>,
@@ -13,6 +14,7 @@ pub struct JobHandle {
 }
 
 /// Application-wide state
+#[allow(dead_code)]
 pub struct AppState {
     pub active_jobs: RwLock<HashMap<String, JobHandle>>,
     pub temp_dir: RwLock<Option<TempDir>>,
@@ -22,6 +24,7 @@ pub struct AppState {
 
 /// App settings
 #[derive(Clone, Default)]
+#[allow(dead_code)]
 pub struct AppSettings {
     pub default_output_dir: Option<PathBuf>,
     pub compression_level: String,
@@ -54,6 +57,7 @@ impl AppState {
         }
     }
 
+    #[allow(dead_code)]
     pub fn add_job(&self, id: String) {
         let mut jobs = self.active_jobs.write().unwrap();
         jobs.insert(id.clone(), JobHandle {
@@ -63,6 +67,7 @@ impl AppState {
         });
     }
 
+    #[allow(dead_code)]
     pub fn update_job_progress(&self, id: &str, progress: f32, status: &str) {
         let jobs = self.active_jobs.read().unwrap();
         if let Some(job) = jobs.get(id) {
@@ -71,10 +76,12 @@ impl AppState {
         }
     }
 
+    #[allow(dead_code)]
     pub fn complete_job(&self, id: &str) {
         self.update_job_progress(id, 100.0, "complete");
     }
 
+    #[allow(dead_code)]
     pub fn remove_job(&self, id: &str) {
         let mut jobs = self.active_jobs.write().unwrap();
         jobs.remove(id);

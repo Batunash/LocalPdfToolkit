@@ -329,7 +329,7 @@ pub struct PdfInfo {
     pub modification_date: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct PageSize {
     pub width: f32,
     pub height: f32,

@@ -9,3 +9,4 @@ pub mod convert;
 
 pub use error::LpError;
 pub use types::*;
+pub use utils::info::get_pdf_info;

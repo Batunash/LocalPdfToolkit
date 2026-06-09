@@ -23,7 +23,7 @@ pub async fn pdf_rotate(
         90 => RotationAngle::Deg90,
         180 => RotationAngle::Deg180,
         270 => RotationAngle::Deg270,
-        _ => RotationAngle::Deg90,
+        _ => return Err("Angle must be 90, 180, or 270".to_string()),
     };
 
     let opts = RotateOpts {
