@@ -15,8 +15,8 @@ export const UnlockTool: React.FC<UnlockToolProps> = ({ onBack }) => {
   const { t } = useTranslation();
 
   const handleUnlock = async (files: SelectedFile[], setProgress: (pct: number, msg?: string) => void) => {
-    if (files.length === 0) throw new Error('No file selected');
-    if (!password) throw new Error('Password cannot be empty');
+    if (files.length === 0) throw new Error(t('common.noFileSelected'));
+    if (!password) throw new Error(t('common.passwordEmpty'));
 
     setProgress(10, 'Getting temporary directory...');
     const tempDir = await tauriAdapter.getTempDir();

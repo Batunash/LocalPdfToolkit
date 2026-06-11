@@ -12,7 +12,7 @@ interface ToolWrapperProps {
   description: string;
   multipleFiles?: boolean;
   acceptExtensions?: string[];
-  optionsPanel?: React.ReactNode;
+  optionsPanel?: React.ReactNode | ((files: SelectedFile[], setFiles: React.Dispatch<React.SetStateAction<SelectedFile[]>>) => React.ReactNode);
   onRun: (files: SelectedFile[], setProgress: (pct: number, msg?: string) => void) => Promise<string | string[]>;
   onBack: () => void;
 }
@@ -216,116 +216,115 @@ export const ToolWrapper: React.FC<ToolWrapperProps> = ({
               exit={{ opacity: 0 }}
               className="flex-1 flex flex-col lg:flex-row gap-6 min-h-0"
             >
-              {/* File selection / list area */}
-              <div className="flex-1 flex flex-col min-h-0">
-                {files.length === 0 ? (
-                  <div className="flex-1 flex items-center justify-center">
-                    <DropZone
-                      onFilesSelected={handleFilesSelected}
-                      multiple={multipleFiles}
-                      acceptExtensions={acceptExtensions}
-                      descriptionText={t('common.dropzoneText')}
-                    />
-                  </div>
-                ) : (
-                  <div className="flex-1 flex flex-col border border-zinc-200 dark:border-zinc-800/60 bg-white/50 dark:bg-zinc-900/10 rounded-xl p-5 min-h-0 overflow-y-auto shadow-sm">
-                    <div className="flex items-center justify-between mb-4 pb-3 border-b border-zinc-200 dark:border-zinc-800/60">
-                      <span className="text-zinc-500 dark:text-zinc-400 text-xs font-semibold">
-                        {t('common.filesSelected', { count: files.length })}
-                      </span>
-                      <button
-                        onClick={handleClear}
-                        className="text-xs text-rose-500 hover:text-rose-600 dark:hover:text-rose-400 transition-colors flex items-center gap-1.5 font-bold cursor-pointer"
-                      >
-                        <Icons.Trash className="w-3.5 h-3.5" />
-                        <span>{t('common.clearAll')}</span>
-                      </button>
-                    </div>
-
-                    <div className="space-y-2 flex-1 overflow-y-auto pr-1">
-                      {files.map((file, idx) => (
-                        <div
-                          key={idx}
-                          className="flex items-center justify-between p-3 bg-white dark:bg-zinc-900/30 border border-zinc-200 dark:border-zinc-800/80 hover:border-zinc-300 dark:hover:border-zinc-700 rounded-xl group transition-all"
-                        >
-                          <div className="flex items-center gap-3 min-w-0">
-                            <div className="w-8 h-8 rounded-lg bg-zinc-105 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-center text-zinc-500 dark:text-zinc-400 flex-shrink-0">
-                              <Icons.File className="w-4 h-4" />
-                            </div>
-                            <div className="min-w-0">
-                              <h4 className="text-zinc-800 dark:text-zinc-200 text-xs font-bold truncate pr-2">
-                                {file.name}
-                              </h4>
-                              <div className="flex items-center gap-2 text-zinc-400 dark:text-zinc-500 text-[10px] mt-0.5 font-medium">
-                                <span>{formatSize(file.size)}</span>
-                                {file.pages !== undefined && (
-                                  <>
-                                    <span>•</span>
-                                    <span>{file.pages} {t('options.totalPages').toLowerCase()}</span>
-                                  </>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                          <button
-                            onClick={() => handleRemoveFile(idx)}
-                            className="p-1 rounded-lg text-zinc-450 hover:text-rose-500 hover:bg-rose-500/10 transition-all opacity-0 group-hover:opacity-100 cursor-pointer"
-                          >
-                            <Icons.X className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-
-                    {multipleFiles && (
-                      <button
-                        onClick={async () => {
-                          const paths = await tauriAdapter.selectFile(acceptExtensions, true);
-                          if (paths) {
-                            const fileArray = Array.isArray(paths) ? paths : [paths];
-                            const loaded = await Promise.all(fileArray.map(async (filePath) => {
-                              const name = filePath.split(/[\\/]/).pop() || 'document.pdf';
-                              let pages = undefined;
-                              let size = 1024 * 150;
-                              try {
-                                const info = await tauriAdapter.getPdfInfo(filePath);
-                                pages = info.pages;
-                                size = info.sizeBytes;
-                              } catch (e) {}
-                              return { name, path: filePath, size, pages };
-                            }));
-                            handleFilesSelected(loaded);
-                          }
-                        }}
-                        className="mt-4 py-2 border border-dashed border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 bg-white/40 dark:bg-zinc-900/10 hover:bg-white dark:hover:bg-zinc-900/30 text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
-                      >
-                        <Icons.Plus className="w-3.5 h-3.5" />
-                        {t('common.addMore')}
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Side Options Panel (rendered if files are selected) */}
-              {files.length > 0 && (
-                <div className="w-full lg:w-80 flex flex-col border border-zinc-200 dark:border-zinc-800/60 bg-white/50 dark:bg-zinc-900/10 rounded-xl p-5 flex-shrink-0 h-fit max-h-full shadow-sm">
-                  <h3 className="text-zinc-755 dark:text-zinc-205 font-extrabold text-xs mb-4 pb-2 border-b border-zinc-200 dark:border-zinc-800/60 flex items-center gap-2">
-                    <Icons.SlidersHorizontal className="w-3.5 h-3.5 text-zinc-550" />
+              {/* Main Options Panel (Rendered prominently on the left if files are selected, otherwise full dropzone) */}
+              {files.length > 0 ? (
+                <div className="flex-1 flex flex-col border border-zinc-200 dark:border-zinc-800/60 bg-white/50 dark:bg-zinc-900/10 rounded-xl p-6 shadow-sm min-h-0">
+                  <h3 className="text-zinc-755 dark:text-zinc-205 font-extrabold text-sm mb-6 pb-3 border-b border-zinc-200 dark:border-zinc-800/60 flex items-center gap-2">
+                    <Icons.SlidersHorizontal className="w-4 h-4 text-zinc-550" />
                     {t('common.settings')}
                   </h3>
 
-                  <div className="flex-1 overflow-y-auto space-y-4 pr-1 mb-6">
-                    {optionsPanel}
+                  <div className="flex-1 overflow-y-auto space-y-6 pr-2 mb-6">
+                    {typeof optionsPanel === 'function' ? optionsPanel(files, setFiles) : optionsPanel}
                   </div>
 
                   <button
                     onClick={handleProcess}
-                    className="w-full py-2.5 bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-950 font-bold text-xs rounded-xl shadow-sm hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    className="w-full py-3.5 bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-950 font-bold text-sm rounded-xl shadow-sm hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-pointer mt-auto"
                   >
-                    <Icons.Play className="w-3 h-3 fill-current" />
+                    <Icons.Play className="w-4 h-4 fill-current" />
                     {t('common.process')}
                   </button>
+                </div>
+              ) : (
+                <div className="flex-1 flex items-center justify-center">
+                  <DropZone
+                    onFilesSelected={handleFilesSelected}
+                    multiple={multipleFiles}
+                    acceptExtensions={acceptExtensions}
+                    descriptionText={t('common.dropzoneText')}
+                  />
+                </div>
+              )}
+
+              {/* Side File List (Rendered on the right if files are selected) */}
+              {files.length > 0 && (
+                <div className="w-full lg:w-80 flex flex-col border border-zinc-200 dark:border-zinc-800/60 bg-white/50 dark:bg-zinc-900/10 rounded-xl p-5 flex-shrink-0 min-h-0 shadow-sm">
+                  <div className="flex items-center justify-between mb-4 pb-3 border-b border-zinc-200 dark:border-zinc-800/60">
+                    <span className="text-zinc-500 dark:text-zinc-400 text-xs font-semibold flex items-center gap-2">
+                      <Icons.FileStack className="w-3.5 h-3.5" />
+                      {t('common.filesSelected', { count: files.length })}
+                    </span>
+                    <button
+                      onClick={handleClear}
+                      className="text-xs text-rose-500 hover:text-rose-600 dark:hover:text-rose-400 transition-colors flex items-center gap-1.5 font-bold cursor-pointer"
+                    >
+                      <Icons.Trash className="w-3.5 h-3.5" />
+                      <span>{t('common.clearAll')}</span>
+                    </button>
+                  </div>
+
+                  <div className="space-y-2 flex-1 overflow-y-auto pr-1">
+                    {files.map((file, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center justify-between p-3 bg-white dark:bg-zinc-900/30 border border-zinc-200 dark:border-zinc-800/80 hover:border-zinc-300 dark:hover:border-zinc-700 rounded-xl group transition-all"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-8 h-8 rounded-lg bg-zinc-105 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-center text-zinc-500 dark:text-zinc-400 flex-shrink-0">
+                            <Icons.File className="w-4 h-4" />
+                          </div>
+                          <div className="min-w-0">
+                            <h4 className="text-zinc-800 dark:text-zinc-200 text-xs font-bold truncate pr-2">
+                              {file.name}
+                            </h4>
+                            <div className="flex items-center gap-2 text-zinc-400 dark:text-zinc-500 text-[10px] mt-0.5 font-medium">
+                              <span>{formatSize(file.size)}</span>
+                              {file.pages !== undefined && (
+                                <>
+                                  <span>•</span>
+                                  <span>{file.pages} {t('options.totalPages').toLowerCase()}</span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => handleRemoveFile(idx)}
+                          className="p-1 rounded-lg text-zinc-450 hover:text-rose-500 hover:bg-rose-500/10 transition-all opacity-0 group-hover:opacity-100 cursor-pointer flex-shrink-0"
+                        >
+                          <Icons.X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
+                  {multipleFiles && (
+                    <button
+                      onClick={async () => {
+                        const paths = await tauriAdapter.selectFile(acceptExtensions, true);
+                        if (paths) {
+                          const fileArray = Array.isArray(paths) ? paths : [paths];
+                          const loaded = await Promise.all(fileArray.map(async (filePath) => {
+                            const name = filePath.split(/[\\/]/).pop() || 'document.pdf';
+                            let pages = undefined;
+                            let size = 1024 * 150;
+                            try {
+                              const info = await tauriAdapter.getPdfInfo(filePath);
+                              pages = info.pages;
+                              size = info.sizeBytes;
+                            } catch (e) {}
+                            return { name, path: filePath, size, pages };
+                          }));
+                          handleFilesSelected(loaded);
+                        }
+                      }}
+                      className="mt-4 py-2 border border-dashed border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 bg-white/40 dark:bg-zinc-900/10 hover:bg-white dark:hover:bg-zinc-900/30 text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer flex-shrink-0"
+                    >
+                      <Icons.Plus className="w-3.5 h-3.5" />
+                      {t('common.addMore')}
+                    </button>
+                  )}
                 </div>
               )}
             </motion.div>

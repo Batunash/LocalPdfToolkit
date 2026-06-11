@@ -108,10 +108,10 @@ export const Layout: React.FC<LayoutProps> = ({ children, activePage, onNavigate
         }`}
       >
         {/* Sidebar Header */}
-        <div className="h-16 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between px-4">
+        <div className={`h-16 border-b border-zinc-200 dark:border-zinc-800 flex items-center ${sidebarCollapsed ? 'justify-center px-0' : 'justify-between px-4'}`}>
           <div
             onClick={() => onNavigate('dashboard')}
-            className="flex items-center gap-2.5 cursor-pointer group"
+            className={`flex items-center gap-2.5 cursor-pointer group ${sidebarCollapsed ? 'hidden' : ''}`}
           >
             <div className="w-8 h-8 rounded-lg bg-zinc-900 dark:bg-zinc-100 flex items-center justify-center border border-zinc-800 dark:border-zinc-300">
               <Icons.FileText className="w-4 h-4 text-white dark:text-zinc-950" />
@@ -134,9 +134,9 @@ export const Layout: React.FC<LayoutProps> = ({ children, activePage, onNavigate
           {sidebarCollapsed && (
             <button
               onClick={() => setSidebarCollapsed(false)}
-              className="mx-auto p-1 rounded-md text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+              className="p-1.5 rounded-md text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer flex items-center justify-center"
             >
-              <Icons.ChevronRight className="w-4 h-4" />
+              <Icons.Menu className="w-5 h-5" />
             </button>
           )}
         </div>
@@ -229,8 +229,8 @@ export const Layout: React.FC<LayoutProps> = ({ children, activePage, onNavigate
             )}
           </button>
           {!sidebarCollapsed && (
-            <div className="text-[9px] text-zinc-400 dark:text-zinc-650 text-center font-medium">
-              v{appVersion} • 100% Offline
+            <div className="text-[10px] text-zinc-400 dark:text-zinc-650 text-center font-bold">
+              v{appVersion}
             </div>
           )}
         </div>
@@ -238,24 +238,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activePage, onNavigate
 
       {/* Main Content Pane */}
       <main className="flex-1 flex flex-col overflow-hidden relative z-1 bg-zinc-50 dark:bg-zinc-950">
-        {/* Top Header */}
-        <header className="h-16 border-b border-zinc-200 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/10 backdrop-blur-sm flex items-center justify-between px-6">
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-650 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-700">
-              {t('brand.mode')}
-            </span>
-            <span className="text-[10px] text-zinc-400 dark:text-zinc-500 font-medium">
-              {t('brand.securityNotice')}
-            </span>
-          </div>
 
-          <div className="flex items-center gap-4">
-            <div className="text-[10px] text-zinc-450 dark:text-zinc-500 font-semibold flex items-center gap-1.5">
-              <Icons.ShieldAlert className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500" />
-              <span>{t('brand.privacyNotice')}</span>
-            </div>
-          </div>
-        </header>
 
         {/* Page Content View */}
         <div className="flex-1 overflow-y-auto relative p-6">

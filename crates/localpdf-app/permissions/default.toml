@@ -1,0 +1,27 @@
+"$schema" = "../gen/schemas/desktop-schema.json"
+
+[[permission]]
+identifier = "default"
+description = "Default permissions for all custom commands"
+commands.allow = [
+    "pdf_merge",
+    "pdf_split",
+    "pdf_remove_pages",
+    "pdf_extract_pages",
+    "pdf_organize",
+    "pdf_compress",
+    "pdf_rotate",
+    "pdf_watermark",
+    "pdf_page_numbers",
+    "pdf_crop",
+    "pdf_ocr",
+    "pdf_protect",
+    "pdf_unlock",
+    "pdf_repair",
+    "convert_any",
+    "pdf_info",
+    "pdf_thumbnail",
+    "get_temp_dir",
+    "clean_temp",
+    "app_version"
+]

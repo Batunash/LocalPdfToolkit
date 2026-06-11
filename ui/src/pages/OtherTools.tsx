@@ -3,6 +3,10 @@ import { ToolWrapper } from '../components/ToolWrapper';
 import type { SelectedFile } from '../types';
 import { tauriAdapter } from '../adapters/tauriAdapter';
 import { useTranslation } from '../i18n';
+import { PdfRangeVisualizer } from '../components/PdfRangeVisualizer';
+import { RangeInputEditor } from '../components/RangeInputEditor';
+import type { PageRange } from '../components/RangeInputEditor';
+import * as Icons from 'lucide-react';
 
 interface ToolProps {
   onBack: () => void;
@@ -10,18 +14,20 @@ interface ToolProps {
 
 // 1. Remove Pages Tool
 export const RemoveTool: React.FC<ToolProps> = ({ onBack }) => {
-  const [ranges, setRanges] = useState<string>('1');
+  const [rangeList, setRangeList] = useState<PageRange[]>([{ id: '1', from: 1, to: 1 }]);
   const { t } = useTranslation();
 
+  const getRangesString = () => rangeList.map(r => r.from === r.to ? `${r.from}` : `${r.from}-${r.to}`).join(', ');
+
   const handleRun = async (files: SelectedFile[], setProgress: (pct: number, msg?: string) => void) => {
-    if (files.length === 0) throw new Error('No file selected');
+    if (files.length === 0) throw new Error(t('common.noFileSelected'));
     setProgress(10, 'Getting temporary directory...');
     const tempDir = await tauriAdapter.getTempDir();
     const file = files[0];
     const outputPath = `${tempDir}\\removed_${Date.now()}.pdf`;
     
     setProgress(50, 'Deleting specific pages...');
-    const result = await tauriAdapter.removePages(file.path, outputPath, ranges, true);
+    const result = await tauriAdapter.removePages(file.path, outputPath, getRangesString(), true);
     setProgress(100, 'Page removal complete!');
     return result;
   };
@@ -33,21 +39,22 @@ export const RemoveTool: React.FC<ToolProps> = ({ onBack }) => {
       description={t('tools.remove.desc')}
       onRun={handleRun}
       onBack={onBack}
-      optionsPanel={
+      optionsPanel={(files) => (
         <div className="space-y-2">
           <label className="text-zinc-550 dark:text-zinc-400 text-xs font-semibold block">{t('options.pageRanges')}</label>
-          <input
-            type="text"
-            placeholder="e.g. 1, 3-5, 8"
-            value={ranges}
-            onChange={(e) => setRanges(e.target.value)}
-            className="w-full px-3 py-2 text-xs bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg outline-none text-zinc-805 dark:text-zinc-200 focus:border-zinc-400 dark:focus:border-zinc-700"
+          <RangeInputEditor 
+            ranges={rangeList} 
+            onChange={setRangeList} 
+            maxPages={files.length > 0 ? files[0]?.pages : undefined}
           />
-          <span className="text-zinc-500 dark:text-zinc-500 text-[10px] block leading-normal mt-1.5 font-medium">
-            {t('options.pageRangesDesc')}
-          </span>
+          {files.length > 0 && files[0] && (
+            <PdfRangeVisualizer
+              filePath={files[0].path}
+              selectedRanges={getRangesString()}
+            />
+          )}
         </div>
-      }
+      )}
     />
   );
 };
@@ -57,7 +64,7 @@ export const RepairTool: React.FC<ToolProps> = ({ onBack }) => {
   const { t } = useTranslation();
 
   const handleRun = async (files: SelectedFile[], setProgress: (pct: number, msg?: string) => void) => {
-    if (files.length === 0) throw new Error('No file selected');
+    if (files.length === 0) throw new Error(t('common.noFileSelected'));
     setProgress(10, 'Getting temporary directory...');
     const tempDir = await tauriAdapter.getTempDir();
     const file = files[0];
@@ -100,8 +107,8 @@ export const WatermarkTool: React.FC<ToolProps> = ({ onBack }) => {
   const { t } = useTranslation();
 
   const handleRun = async (files: SelectedFile[], setProgress: (pct: number, msg?: string) => void) => {
-    if (files.length === 0) throw new Error('No file selected');
-    if (!text) throw new Error('Watermark text cannot be empty');
+    if (files.length === 0) throw new Error(t('common.noFileSelected'));
+    if (!text) throw new Error(t('common.watermarkEmpty'));
 
     setProgress(10, 'Getting temporary directory...');
     const tempDir = await tauriAdapter.getTempDir();
@@ -145,14 +152,32 @@ export const WatermarkTool: React.FC<ToolProps> = ({ onBack }) => {
 
           <div className="space-y-1.5">
             <label className="text-zinc-500 dark:text-zinc-400 text-xs font-semibold block">{t('options.watermarkPosition')}</label>
-            <select
-              value={position}
-              onChange={(e: any) => setPosition(e.target.value)}
-              className="w-full px-3 py-1.5 text-xs bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg outline-none text-zinc-800 dark:text-zinc-200 focus:border-zinc-400 dark:focus:border-zinc-700"
-            >
-              <option value="center">{t('options.center')}</option>
-              <option value="diagonal">{t('options.diagonal')}</option>
-            </select>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setPosition('center')}
+                className={`py-2 rounded-xl border text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2 ${
+                  position === 'center'
+                    ? 'bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border-zinc-350 dark:border-zinc-700'
+                    : 'bg-transparent text-zinc-500 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100/50 dark:hover:bg-zinc-900/30'
+                }`}
+              >
+                <div className="w-3 h-3 border border-current flex items-center justify-center"><div className="w-1.5 h-0.5 bg-current"></div></div>
+                {t('options.center')}
+              </button>
+              <button
+                type="button"
+                onClick={() => setPosition('diagonal')}
+                className={`py-2 rounded-xl border text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2 ${
+                  position === 'diagonal'
+                    ? 'bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border-zinc-350 dark:border-zinc-700'
+                    : 'bg-transparent text-zinc-500 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100/50 dark:hover:bg-zinc-900/30'
+                }`}
+              >
+                <div className="w-3 h-3 border border-current relative overflow-hidden"><div className="absolute inset-0 m-auto w-4 h-0.5 bg-current rotate-45"></div></div>
+                {t('options.diagonal')}
+              </button>
+            </div>
           </div>
 
           <div className="space-y-1">
@@ -184,13 +209,27 @@ export const WatermarkTool: React.FC<ToolProps> = ({ onBack }) => {
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-zinc-500 dark:text-zinc-400 text-xs font-semibold block">{t('options.color')}</label>
-              <input
-                type="color"
-                value={color}
-                onChange={(e) => setColor(e.target.value)}
-                className="w-full h-8 px-1.5 py-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg outline-none cursor-pointer"
-              />
+              <label className="text-zinc-500 dark:text-zinc-400 text-xs font-semibold block mb-1">{t('options.color')}</label>
+              <div className="flex items-center gap-2 mb-2">
+                {['#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#8b5cf6', '#ec4899', '#6b7280', '#000000'].map(c => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => setColor(c)}
+                    className={`w-5 h-5 rounded-full cursor-pointer transition-all ${color === c ? 'scale-125 ring-2 ring-offset-1 ring-offset-white dark:ring-offset-zinc-950 ring-zinc-400' : 'hover:scale-110 shadow-sm'}`}
+                    style={{ backgroundColor: c }}
+                  />
+                ))}
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={color}
+                  onChange={(e) => setColor(e.target.value)}
+                  className="w-8 h-8 p-0.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded outline-none cursor-pointer"
+                />
+                <span className="text-[10px] text-zinc-400 font-mono uppercase">{color}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -207,7 +246,7 @@ export const PageNumbersTool: React.FC<ToolProps> = ({ onBack }) => {
   const { t } = useTranslation();
 
   const handleRun = async (files: SelectedFile[], setProgress: (pct: number, msg?: string) => void) => {
-    if (files.length === 0) throw new Error('No file selected');
+    if (files.length === 0) throw new Error(t('common.noFileSelected'));
     setProgress(10, 'Getting temporary directory...');
     const tempDir = await tauriAdapter.getTempDir();
     const file = files[0];
@@ -237,18 +276,23 @@ export const PageNumbersTool: React.FC<ToolProps> = ({ onBack }) => {
       optionsPanel={
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <label className="text-zinc-500 dark:text-zinc-400 text-xs font-semibold block">{t('options.position')}</label>
-            <select
-              value={position}
-              onChange={(e: any) => setPosition(e.target.value)}
-              className="w-full px-3 py-1.5 text-xs bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg outline-none text-zinc-800 dark:text-zinc-200 focus:border-zinc-400 dark:focus:border-zinc-700"
-            >
-              <option value="bottom_center">{t('options.bottomCenter')}</option>
-              <option value="bottom_left">{t('options.bottomLeft')}</option>
-              <option value="bottom_right">{t('options.bottomRight')}</option>
-              <option value="top_left">{t('options.topLeft')}</option>
-              <option value="top_right">{t('options.topRight')}</option>
-            </select>
+            <label className="text-zinc-500 dark:text-zinc-400 text-xs font-semibold block mb-2">{t('options.position')}</label>
+            <div className="w-full max-w-[200px] aspect-[1/1.4] mx-auto bg-white dark:bg-zinc-900 border-2 border-zinc-200 dark:border-zinc-800 rounded-xl relative p-3">
+              {/* Top Left */}
+              <button type="button" onClick={() => setPosition('top_left')} className={`absolute top-2 left-2 w-8 h-8 rounded-lg border-2 transition-all cursor-pointer flex items-center justify-center ${position === 'top_left' ? 'bg-indigo-500/20 border-indigo-500 text-indigo-500' : 'bg-zinc-50 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 hover:border-zinc-300 dark:hover:border-zinc-600 text-transparent'}`}><span className="text-[10px] font-bold">1</span></button>
+              {/* Top Right */}
+              <button type="button" onClick={() => setPosition('top_right')} className={`absolute top-2 right-2 w-8 h-8 rounded-lg border-2 transition-all cursor-pointer flex items-center justify-center ${position === 'top_right' ? 'bg-indigo-500/20 border-indigo-500 text-indigo-500' : 'bg-zinc-50 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 hover:border-zinc-300 dark:hover:border-zinc-600 text-transparent'}`}><span className="text-[10px] font-bold">1</span></button>
+              {/* Bottom Left */}
+              <button type="button" onClick={() => setPosition('bottom_left')} className={`absolute bottom-2 left-2 w-8 h-8 rounded-lg border-2 transition-all cursor-pointer flex items-center justify-center ${position === 'bottom_left' ? 'bg-indigo-500/20 border-indigo-500 text-indigo-500' : 'bg-zinc-50 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 hover:border-zinc-300 dark:hover:border-zinc-600 text-transparent'}`}><span className="text-[10px] font-bold">1</span></button>
+              {/* Bottom Right */}
+              <button type="button" onClick={() => setPosition('bottom_right')} className={`absolute bottom-2 right-2 w-8 h-8 rounded-lg border-2 transition-all cursor-pointer flex items-center justify-center ${position === 'bottom_right' ? 'bg-indigo-500/20 border-indigo-500 text-indigo-500' : 'bg-zinc-50 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 hover:border-zinc-300 dark:hover:border-zinc-600 text-transparent'}`}><span className="text-[10px] font-bold">1</span></button>
+              {/* Bottom Center */}
+              <button type="button" onClick={() => setPosition('bottom_center')} className={`absolute bottom-2 left-1/2 -translate-x-1/2 w-8 h-8 rounded-lg border-2 transition-all cursor-pointer flex items-center justify-center ${position === 'bottom_center' ? 'bg-indigo-500/20 border-indigo-500 text-indigo-500' : 'bg-zinc-50 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 hover:border-zinc-300 dark:hover:border-zinc-600 text-transparent'}`}><span className="text-[10px] font-bold">1</span></button>
+              
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20">
+                <Icons.FileText className="w-16 h-16 text-zinc-500" />
+              </div>
+            </div>
           </div>
 
           <div className="space-y-1.5">
@@ -290,7 +334,7 @@ export const CropTool: React.FC<ToolProps> = ({ onBack }) => {
   const { t } = useTranslation();
 
   const handleRun = async (files: SelectedFile[], setProgress: (pct: number, msg?: string) => void) => {
-    if (files.length === 0) throw new Error('No file selected');
+    if (files.length === 0) throw new Error(t('common.noFileSelected'));
     setProgress(10, 'Getting temporary directory...');
     const tempDir = await tauriAdapter.getTempDir();
     const file = files[0];
@@ -370,6 +414,23 @@ export const CropTool: React.FC<ToolProps> = ({ onBack }) => {
                   className="w-full px-2.5 py-1.5 text-xs bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg outline-none text-zinc-850 dark:text-zinc-200 focus:border-zinc-400 dark:focus:border-zinc-700"
                 />
               </div>
+            </div>
+
+            <div className="flex flex-col items-center justify-center p-2 mt-4 bg-zinc-50 dark:bg-zinc-900/50 rounded-xl border border-zinc-200 dark:border-zinc-800">
+              <div className="relative w-24 aspect-[1/1.4] bg-white border-2 border-zinc-300 dark:border-zinc-700 shadow-sm rounded-sm overflow-hidden">
+                <div 
+                  className="absolute bg-indigo-500/20 border border-indigo-500 transition-all duration-300"
+                  style={{
+                    top: `${Math.min(45, unit === 'percentage' ? top : top / 5)}%`,
+                    bottom: `${Math.min(45, unit === 'percentage' ? bottom : bottom / 5)}%`,
+                    left: `${Math.min(45, unit === 'percentage' ? left : left / 5)}%`,
+                    right: `${Math.min(45, unit === 'percentage' ? right : right / 5)}%`
+                  }}
+                >
+                  <div className="w-full h-full border border-indigo-500/30 border-dashed" />
+                </div>
+              </div>
+              <span className="text-[9px] text-zinc-400 font-bold uppercase mt-2">Live Preview</span>
             </div>
           </div>
         </div>

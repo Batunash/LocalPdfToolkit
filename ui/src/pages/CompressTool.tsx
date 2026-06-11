@@ -98,6 +98,28 @@ export const CompressTool: React.FC<CompressToolProps> = ({ onBack }) => {
               );
             })}
           </div>
+
+          <div className="p-4 bg-white dark:bg-zinc-900/30 border border-zinc-200 dark:border-zinc-800 rounded-2xl mt-4">
+            <div className="flex items-center justify-between text-[10px] font-bold text-zinc-500 mb-2 uppercase tracking-wider">
+              <span>Est. Savings</span>
+              <span className={
+                level === 'maximum' ? 'text-rose-500' : 
+                level === 'high' ? 'text-orange-500' : 
+                level === 'balanced' ? 'text-indigo-500' : 'text-emerald-500'
+              }>
+                {level === 'maximum' ? '~85%' : level === 'high' ? '~70%' : level === 'balanced' ? '~50%' : '~20%'}
+              </span>
+            </div>
+            <div className="w-full h-2 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+              <div 
+                className={`h-full transition-all duration-500 ease-out ${
+                  level === 'maximum' ? 'bg-rose-500 w-[85%]' : 
+                  level === 'high' ? 'bg-orange-500 w-[70%]' : 
+                  level === 'balanced' ? 'bg-indigo-500 w-[50%]' : 'bg-emerald-500 w-[20%]'
+                }`}
+              />
+            </div>
+          </div>
         </div>
       }
     />

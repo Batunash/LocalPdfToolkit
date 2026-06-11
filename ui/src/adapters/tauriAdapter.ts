@@ -134,6 +134,15 @@ export const tauriAdapter = {
     return 14;
   },
 
+  readFile: async (filePath: string): Promise<Uint8Array> => {
+    if (checkIsTauri()) {
+      const { readFile } = await import('@tauri-apps/plugin-fs');
+      return await readFile(filePath);
+    }
+    // Return empty array for mock
+    return new Uint8Array();
+  },
+
   // PDF tools
   merge: async (inputFiles: string[], outputPath: string, overwrite: boolean = true): Promise<string> => {
     if (checkIsTauri()) {

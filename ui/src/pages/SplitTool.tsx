@@ -4,6 +4,9 @@ import type { SelectedFile } from '../types';
 import { tauriAdapter } from '../adapters/tauriAdapter';
 import { useTranslation } from '../i18n';
 import * as Icons from 'lucide-react';
+import { PdfRangeVisualizer } from '../components/PdfRangeVisualizer';
+import { RangeInputEditor } from '../components/RangeInputEditor';
+import type { PageRange } from '../components/RangeInputEditor';
 
 interface SplitToolProps {
   onBack: () => void;
@@ -12,8 +15,10 @@ interface SplitToolProps {
 export const SplitTool: React.FC<SplitToolProps> = ({ onBack }) => {
   const [mode, setMode] = useState<'by_every' | 'by_ranges'>('by_every');
   const [nPages, setNPages] = useState<number>(1);
-  const [ranges, setRanges] = useState<string>('1-2');
+  const [rangeList, setRangeList] = useState<PageRange[]>([{ id: '1', from: 1, to: 2 }]);
   const { t } = useTranslation();
+
+  const getRangesString = () => rangeList.map(r => `${r.from}-${r.to}`).join(', ');
 
   const handleSplit = async (files: SelectedFile[], setProgress: (pct: number, msg?: string) => void) => {
     if (files.length === 0) throw new Error('No file selected');
@@ -29,7 +34,7 @@ export const SplitTool: React.FC<SplitToolProps> = ({ onBack }) => {
       file.path,
       outputDir,
       mode,
-      mode === 'by_ranges' ? ranges : undefined,
+      mode === 'by_ranges' ? getRangesString() : undefined,
       mode === 'by_every' ? nPages : undefined,
       true
     );
@@ -46,7 +51,7 @@ export const SplitTool: React.FC<SplitToolProps> = ({ onBack }) => {
       multipleFiles={false}
       onRun={handleSplit}
       onBack={onBack}
-      optionsPanel={
+      optionsPanel={(files) => (
         <div className="space-y-4">
           <div>
             <label className="text-zinc-500 dark:text-zinc-400 text-xs font-semibold block mb-2">{t('options.splitMode')}</label>
@@ -100,21 +105,22 @@ export const SplitTool: React.FC<SplitToolProps> = ({ onBack }) => {
                   <Icons.Hash className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500" />
                   {t('options.pageRanges')}
                 </label>
-                <input
-                  type="text"
-                  placeholder="e.g. 1-3, 5, 7-9"
-                  value={ranges}
-                  onChange={(e) => setRanges(e.target.value)}
-                  className="w-full px-3 py-1.5 text-xs bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg outline-none text-zinc-800 dark:text-zinc-200 focus:border-zinc-400 dark:focus:border-zinc-650"
+                <RangeInputEditor 
+                  ranges={rangeList} 
+                  onChange={setRangeList} 
+                  maxPages={files.length > 0 ? files[0]?.pages : undefined}
                 />
-                <span className="text-zinc-450 dark:text-zinc-550 text-[10px] block leading-normal mt-1.5 font-medium">
-                  {t('options.pageRangesDesc')}
-                </span>
+                {files.length > 0 && files[0] && (
+                  <PdfRangeVisualizer 
+                    filePath={files[0].path} 
+                    selectedRanges={getRangesString()} 
+                  />
+                )}
               </div>
             )}
           </div>
         </div>
-      }
+      )}
     />
   );
 };

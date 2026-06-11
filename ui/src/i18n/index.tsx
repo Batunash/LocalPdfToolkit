@@ -46,6 +46,9 @@ export const translations = {
     'common.browse': 'Browse Files',
     'common.savedSuccess': 'File saved successfully to: ',
     'common.overwrite': 'Overwrite existing file',
+    'common.noFileSelected': 'No file selected',
+    'common.passwordEmpty': 'Password cannot be empty',
+    'common.watermarkEmpty': 'Watermark text cannot be empty',
     // Tool Options
     'options.mergeStrategy': 'Merge Strategy',
     'options.standardAppend': 'Standard Append',
@@ -212,6 +215,9 @@ export const translations = {
     'common.browse': 'Dosyalara Göz At',
     'common.savedSuccess': 'Dosya başarıyla kaydedildi: ',
     'common.overwrite': 'Mevcut dosyanın üzerine yaz',
+    'common.noFileSelected': 'Herhangi bir dosya seçilmedi',
+    'common.passwordEmpty': 'Şifre alanı boş bırakılamaz',
+    'common.watermarkEmpty': 'Filigran metni boş bırakılamaz',
     // Tool Options
     'options.mergeStrategy': 'Birleştirme Stratejisi',
     'options.standardAppend': 'Standart Ekleme',

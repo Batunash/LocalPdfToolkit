@@ -4,6 +4,9 @@ import type { SelectedFile } from '../types';
 import { tauriAdapter } from '../adapters/tauriAdapter';
 import { useTranslation } from '../i18n';
 import * as Icons from 'lucide-react';
+import { PdfRangeVisualizer } from '../components/PdfRangeVisualizer';
+import { RangeInputEditor } from '../components/RangeInputEditor';
+import type { PageRange } from '../components/RangeInputEditor';
 
 interface RotateToolProps {
   onBack: () => void;
@@ -12,8 +15,10 @@ interface RotateToolProps {
 export const RotateTool: React.FC<RotateToolProps> = ({ onBack }) => {
   const [angle, setAngle] = useState<90 | 180 | 270>(90);
   const [targetPages, setTargetPages] = useState<'all' | 'custom'>('all');
-  const [pageRanges, setPageRanges] = useState<string>('1');
+  const [rangeList, setRangeList] = useState<PageRange[]>([{ id: '1', from: 1, to: 1 }]);
   const { t } = useTranslation();
+
+  const getRangesString = () => rangeList.map(r => r.from === r.to ? `${r.from}` : `${r.from}-${r.to}`).join(', ');
 
   const handleRotate = async (files: SelectedFile[], setProgress: (pct: number, msg?: string) => void) => {
     if (files.length === 0) throw new Error('No file selected');
@@ -26,9 +31,11 @@ export const RotateTool: React.FC<RotateToolProps> = ({ onBack }) => {
     const outputPath = `${tempDir}\\rotated_${Date.now()}.pdf`;
     
     let pagesToRotate: number[] | null = null;
-    if (targetPages === 'custom' && pageRanges) {
-      pagesToRotate = [];
-      const parts = pageRanges.split(',');
+    if (targetPages === 'custom') {
+      const pageRangesStr = getRangesString();
+      if (pageRangesStr) {
+        pagesToRotate = [];
+        const parts = pageRangesStr.split(',');
       for (const part of parts) {
         if (part.includes('-')) {
           const [start, end] = part.split('-').map(p => parseInt(p.trim()));
@@ -40,6 +47,7 @@ export const RotateTool: React.FC<RotateToolProps> = ({ onBack }) => {
           if (p) pagesToRotate.push(p);
         }
       }
+    }
     }
 
     setProgress(65, 'Rotating page matrix...');
@@ -63,7 +71,7 @@ export const RotateTool: React.FC<RotateToolProps> = ({ onBack }) => {
       multipleFiles={false}
       onRun={handleRotate}
       onBack={onBack}
-      optionsPanel={
+      optionsPanel={(files) => (
         <div className="space-y-4">
           <div className="space-y-2">
             <label className="text-zinc-505 dark:text-zinc-400 text-xs font-semibold block">{t('options.rotationAngle')}</label>
@@ -119,18 +127,22 @@ export const RotateTool: React.FC<RotateToolProps> = ({ onBack }) => {
 
             {targetPages === 'custom' && (
               <div className="pt-2">
-                <input
-                  type="text"
-                  placeholder="e.g. 1, 3-5"
-                  value={pageRanges}
-                  onChange={(e) => setPageRanges(e.target.value)}
-                  className="w-full px-3 py-1.5 text-xs bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg outline-none text-zinc-800 dark:text-zinc-200 focus:border-zinc-400 dark:focus:border-zinc-650"
+                <RangeInputEditor 
+                  ranges={rangeList} 
+                  onChange={setRangeList} 
+                  maxPages={files.length > 0 ? files[0]?.pages : undefined}
                 />
+                {files.length > 0 && files[0] && (
+                  <PdfRangeVisualizer
+                    filePath={files[0].path}
+                    selectedRanges={getRangesString()}
+                  />
+                )}
               </div>
             )}
           </div>
         </div>
-      }
+      )}
     />
   );
 };

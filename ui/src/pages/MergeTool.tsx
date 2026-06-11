@@ -3,6 +3,7 @@ import { ToolWrapper } from '../components/ToolWrapper';
 import type { SelectedFile } from '../types';
 import { tauriAdapter } from '../adapters/tauriAdapter';
 import { useTranslation } from '../i18n';
+import { SortableFileList } from '../components/SortableFileList';
 
 interface MergeToolProps {
   onBack: () => void;
@@ -34,21 +35,30 @@ export const MergeTool: React.FC<MergeToolProps> = ({ onBack }) => {
       multipleFiles={true}
       onRun={handleMerge}
       onBack={onBack}
-      optionsPanel={
-        <div className="space-y-4">
-          <div className="p-4 bg-white dark:bg-zinc-900/30 border border-zinc-200 dark:border-zinc-800 rounded-2xl">
-            <span className="text-zinc-500 dark:text-zinc-400 text-xs font-semibold block mb-1">
+      optionsPanel={(files, setFiles) => (
+        <div className="space-y-6">
+          <div className="p-4 bg-white dark:bg-zinc-900/30 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-sm">
+            <span className="text-zinc-500 dark:text-zinc-400 text-[10px] uppercase tracking-wider font-bold block mb-1">
               {t('options.mergeStrategy')}
             </span>
-            <span className="text-zinc-800 dark:text-zinc-200 text-xs font-bold block mt-1">
+            <span className="text-zinc-800 dark:text-zinc-200 text-sm font-black block mt-2">
               {t('options.standardAppend')}
             </span>
-            <p className="text-zinc-450 dark:text-zinc-500 text-[10px] mt-1.5 leading-relaxed font-medium">
+            <p className="text-zinc-500 dark:text-zinc-400 text-xs mt-1.5 leading-relaxed font-medium">
               {t('options.standardAppendDesc')}
             </p>
           </div>
+
+          {files.length > 0 && (
+            <div className="space-y-3">
+              <span className="text-zinc-500 dark:text-zinc-400 text-[10px] uppercase tracking-wider font-bold block px-1">
+                Merge Order
+              </span>
+              <SortableFileList files={files} onReorder={setFiles} />
+            </div>
+          )}
         </div>
-      }
+      )}
     />
   );
 };

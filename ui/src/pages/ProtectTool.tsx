@@ -19,8 +19,8 @@ export const ProtectTool: React.FC<ProtectToolProps> = ({ onBack }) => {
   const { t } = useTranslation();
 
   const handleProtect = async (files: SelectedFile[], setProgress: (pct: number, msg?: string) => void) => {
-    if (files.length === 0) throw new Error('No file selected');
-    if (!password) throw new Error('Password cannot be empty');
+    if (files.length === 0) throw new Error(t('common.noFileSelected'));
+    if (!password) throw new Error(t('common.passwordEmpty'));
 
     setProgress(10, 'Getting temporary directory...');
     const tempDir = await tauriAdapter.getTempDir();
@@ -82,44 +82,40 @@ export const ProtectTool: React.FC<ProtectToolProps> = ({ onBack }) => {
               {t('options.permissions')}
             </label>
             
-            <label className="flex items-center gap-3 text-zinc-600 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-250 transition-colors cursor-pointer py-0.5 font-medium">
-              <input
-                type="checkbox"
-                checked={allowPrint}
-                onChange={(e) => setAllowPrint(e.target.checked)}
-                className="rounded border-zinc-300 dark:border-zinc-800 text-zinc-800 dark:text-zinc-200 focus:ring-zinc-400/30 w-4 h-4 bg-white dark:bg-zinc-900 outline-none"
-              />
-              <span className="text-xs">{t('options.allowPrint')}</span>
+            <label className="flex items-center justify-between cursor-pointer py-2 group">
+              <span className="text-xs font-bold text-zinc-600 dark:text-zinc-400 group-hover:text-zinc-800 dark:group-hover:text-zinc-200 transition-colors">{t('options.allowPrint')}</span>
+              <div className="relative">
+                <input type="checkbox" checked={allowPrint} onChange={(e) => setAllowPrint(e.target.checked)} className="sr-only" />
+                <div className={`block w-9 h-5 rounded-full transition-colors ${allowPrint ? 'bg-indigo-500' : 'bg-zinc-200 dark:bg-zinc-700'}`}></div>
+                <div className={`absolute left-0.5 top-0.5 bg-white w-4 h-4 rounded-full transition-transform shadow-sm ${allowPrint ? 'transform translate-x-4' : ''}`}></div>
+              </div>
             </label>
 
-            <label className="flex items-center gap-3 text-zinc-600 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-250 transition-colors cursor-pointer py-0.5 font-medium">
-              <input
-                type="checkbox"
-                checked={allowModify}
-                onChange={(e) => setAllowModify(e.target.checked)}
-                className="rounded border-zinc-300 dark:border-zinc-800 text-zinc-800 dark:text-zinc-200 focus:ring-zinc-400/30 w-4 h-4 bg-white dark:bg-zinc-900 outline-none"
-              />
-              <span className="text-xs">{t('options.allowModify')}</span>
+            <label className="flex items-center justify-between cursor-pointer py-2 group">
+              <span className="text-xs font-bold text-zinc-600 dark:text-zinc-400 group-hover:text-zinc-800 dark:group-hover:text-zinc-200 transition-colors">{t('options.allowModify')}</span>
+              <div className="relative">
+                <input type="checkbox" checked={allowModify} onChange={(e) => setAllowModify(e.target.checked)} className="sr-only" />
+                <div className={`block w-9 h-5 rounded-full transition-colors ${allowModify ? 'bg-indigo-500' : 'bg-zinc-200 dark:bg-zinc-700'}`}></div>
+                <div className={`absolute left-0.5 top-0.5 bg-white w-4 h-4 rounded-full transition-transform shadow-sm ${allowModify ? 'transform translate-x-4' : ''}`}></div>
+              </div>
             </label>
 
-            <label className="flex items-center gap-3 text-zinc-600 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-250 transition-colors cursor-pointer py-0.5 font-medium">
-              <input
-                type="checkbox"
-                checked={allowCopy}
-                onChange={(e) => setAllowCopy(e.target.checked)}
-                className="rounded border-zinc-300 dark:border-zinc-800 text-zinc-800 dark:text-zinc-200 focus:ring-zinc-400/30 w-4 h-4 bg-white dark:bg-zinc-900 outline-none"
-              />
-              <span className="text-xs">{t('options.allowCopy')}</span>
+            <label className="flex items-center justify-between cursor-pointer py-2 group">
+              <span className="text-xs font-bold text-zinc-600 dark:text-zinc-400 group-hover:text-zinc-800 dark:group-hover:text-zinc-200 transition-colors">{t('options.allowCopy')}</span>
+              <div className="relative">
+                <input type="checkbox" checked={allowCopy} onChange={(e) => setAllowCopy(e.target.checked)} className="sr-only" />
+                <div className={`block w-9 h-5 rounded-full transition-colors ${allowCopy ? 'bg-indigo-500' : 'bg-zinc-200 dark:bg-zinc-700'}`}></div>
+                <div className={`absolute left-0.5 top-0.5 bg-white w-4 h-4 rounded-full transition-transform shadow-sm ${allowCopy ? 'transform translate-x-4' : ''}`}></div>
+              </div>
             </label>
 
-            <label className="flex items-center gap-3 text-zinc-600 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-250 transition-colors cursor-pointer py-0.5 font-medium">
-              <input
-                type="checkbox"
-                checked={allowAnnotate}
-                onChange={(e) => setAllowAnnotate(e.target.checked)}
-                className="rounded border-zinc-300 dark:border-zinc-800 text-zinc-800 dark:text-zinc-200 focus:ring-zinc-400/30 w-4 h-4 bg-white dark:bg-zinc-900 outline-none"
-              />
-              <span className="text-xs">{t('options.allowAnnotate')}</span>
+            <label className="flex items-center justify-between cursor-pointer py-2 group">
+              <span className="text-xs font-bold text-zinc-600 dark:text-zinc-400 group-hover:text-zinc-800 dark:group-hover:text-zinc-200 transition-colors">{t('options.allowAnnotate')}</span>
+              <div className="relative">
+                <input type="checkbox" checked={allowAnnotate} onChange={(e) => setAllowAnnotate(e.target.checked)} className="sr-only" />
+                <div className={`block w-9 h-5 rounded-full transition-colors ${allowAnnotate ? 'bg-indigo-500' : 'bg-zinc-200 dark:bg-zinc-700'}`}></div>
+                <div className={`absolute left-0.5 top-0.5 bg-white w-4 h-4 rounded-full transition-transform shadow-sm ${allowAnnotate ? 'transform translate-x-4' : ''}`}></div>
+              </div>
             </label>
           </div>
         </div>
