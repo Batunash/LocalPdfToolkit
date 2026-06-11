@@ -1,8 +1,9 @@
 //! Remove specific pages from a PDF
 
-use crate::engine::pdfium::LoPdfEngine;
 use crate::error::LpError;
-use crate::types::{RemoveOpts, JobOutput, Progress};
+use crate::types::{JobOutput, Progress, RemoveOpts};
+use lopdf::Document;
+use std::collections::HashSet;
 use std::time::Instant;
 
 /// Remove specified pages from a PDF
@@ -14,25 +15,54 @@ pub fn run(
 
     progress(Progress::new(0.0, "Loading PDF...", "remove_pages"));
 
-    let source_doc = LoPdfEngine::open_document(&opts.input_file)
+    let source_doc = Document::load(&opts.input_file)
         .map_err(|e| LpError::PdfCorrupt(format!(
             "Failed to load '{}': {}",
             opts.input_file.display(),
             e
         )))?;
 
-    let page_count = LoPdfEngine::page_count(&source_doc);
-    let pages_to_remove: std::collections::HashSet<u32> = opts.pages_to_remove
+    let page_count = source_doc.get_pages().len();
+    let pages_to_remove: HashSet<u32> = opts.pages_to_remove
         .iter()
-        .filter_map(|&p| if p >= 1 { Some(p) } else { None })
+        .filter(|&&p| p >= 1 && p <= page_count as u32)
+        .copied()
         .collect();
 
-    progress(Progress::new(20.0, &format!("Removing {} pages from {}", pages_to_remove.len(), page_count), "remove_pages"));
+    let pages_to_keep = page_count - pages_to_remove.len();
+    progress(Progress::new(20.0, &format!("Keeping {} of {} pages", pages_to_keep, page_count), "remove_pages"));
 
-    let mut new_doc = LoPdfEngine::create_document()?;
+    // Create a new document with only the pages to keep
+    let mut output_doc = Document::with_version("1.7");
+    let source_pages = source_doc.get_pages();
+    let mut page_refs: Vec<lopdf::Object> = Vec::new();
 
-    // Note: Full implementation would copy only non-removed pages
-    // For now, create an empty placeholder document
+    for (page_num, page_obj_id) in &source_pages {
+        if !pages_to_remove.contains(page_num) {
+            if let Ok(page_obj) = source_doc.get_object(*page_obj_id) {
+                let new_id = output_doc.new_object_id();
+                let new_page = page_obj.clone();
+                output_doc.objects.insert(new_id, new_page);
+                page_refs.push(lopdf::Object::Reference(new_id));
+            }
+        }
+    }
+
+    // Create Pages dictionary
+    let mut pages_dict = lopdf::Dictionary::new();
+    pages_dict.set(b"Type", lopdf::Object::Name(b"Pages".to_vec()));
+    pages_dict.set(b"Kids", lopdf::Object::Array(page_refs.clone()));
+    pages_dict.set(b"Count", lopdf::Object::Integer(page_refs.len() as i64));
+
+    let pages_id = output_doc.add_object(pages_dict);
+
+    // Create Catalog
+    let mut catalog = lopdf::Dictionary::new();
+    catalog.set(b"Type", lopdf::Object::Name(b"Catalog".to_vec()));
+    catalog.set(b"Pages", lopdf::Object::Reference(pages_id));
+
+    let catalog_id = output_doc.add_object(catalog);
+    output_doc.trailer.set(b"Root", lopdf::Object::Reference(catalog_id));
 
     progress(Progress::new(80.0, "Saving output...", "remove_pages"));
 
@@ -41,7 +71,8 @@ pub fn run(
         std::fs::create_dir_all(parent).map_err(LpError::Io)?;
     }
 
-    LoPdfEngine::save_document(&mut new_doc, &opts.output_path)
+    output_doc.save(&opts.output_path)
+        .map(|_| ())
         .map_err(|e| LpError::PdfCorrupt(format!("Failed to save PDF: {}", e)))?;
 
     let processing_time = start.elapsed().as_millis() as u64;
@@ -56,7 +87,7 @@ pub fn run(
         file_size,
         processing_time,
     )
-    .with_page_count(0))
+    .with_page_count(page_refs.len() as u32))
 }
 
 #[cfg(test)]

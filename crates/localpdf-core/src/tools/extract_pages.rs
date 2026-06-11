@@ -1,8 +1,9 @@
 //! Extract specific pages into a new PDF
 
-use crate::engine::pdfium::LoPdfEngine;
 use crate::error::LpError;
-use crate::types::{ExtractOpts, JobOutput, Progress};
+use crate::types::{JobOutput, Progress, ExtractOpts};
+use lopdf::Document;
+use std::collections::HashSet;
 use std::time::Instant;
 
 /// Extract specified pages into a new PDF
@@ -14,35 +15,53 @@ pub fn run(
 
     progress(Progress::new(0.0, "Loading PDF...", "extract_pages"));
 
-    let source_doc = LoPdfEngine::open_document(&opts.input_file)
+    let source_doc = Document::load(&opts.input_file)
         .map_err(|e| LpError::PdfCorrupt(format!(
             "Failed to load '{}': {}",
             opts.input_file.display(),
             e
         )))?;
 
-    let page_count = LoPdfEngine::page_count(&source_doc);
-    let pages_to_extract: std::collections::HashSet<u32> = opts.pages_to_extract
+    let page_count = source_doc.get_pages().len();
+    let pages_to_extract: HashSet<u32> = opts.pages_to_extract
         .iter()
-        .filter_map(|&p| if p >= 1 && p <= page_count as u32 { Some(p) } else { None })
+        .filter(|&&p| p >= 1 && p <= page_count as u32)
+        .copied()
         .collect();
 
-    progress(Progress::new(20.0, &format!("Extracting {} pages from {}", pages_to_extract.len(), page_count), "extract_pages"));
+    progress(Progress::new(20.0, &format!("Extracting {} pages", pages_to_extract.len()), "extract_pages"));
 
-    let mut new_doc = LoPdfEngine::create_document()?;
+    // Create a new document with only the extracted pages
+    let mut output_doc = Document::with_version("1.7");
+    let source_pages = source_doc.get_pages();
+    let mut page_refs: Vec<lopdf::Object> = Vec::new();
 
-    // Get all page object IDs from source
-    let page_ids = LoPdfEngine::get_page_object_ids(&source_doc);
-
-    // Copy requested pages to new document
-    for (idx, &page_id) in page_ids.iter().enumerate() {
-        let page_num = (idx + 1) as u32;
-        if pages_to_extract.contains(&page_num) {
-            // Note: lopdf doesn't provide a simple way to copy objects between documents
-            // Full implementation would need to handle this at the object level
-            let _ = page_id;
+    for (page_num, page_obj_id) in &source_pages {
+        if pages_to_extract.contains(page_num) {
+            if let Ok(page_obj) = source_doc.get_object(*page_obj_id) {
+                let new_id = output_doc.new_object_id();
+                let new_page = page_obj.clone();
+                output_doc.objects.insert(new_id, new_page);
+                page_refs.push(lopdf::Object::Reference(new_id));
+            }
         }
     }
+
+    // Create Pages dictionary
+    let mut pages_dict = lopdf::Dictionary::new();
+    pages_dict.set(b"Type", lopdf::Object::Name(b"Pages".to_vec()));
+    pages_dict.set(b"Kids", lopdf::Object::Array(page_refs.clone()));
+    pages_dict.set(b"Count", lopdf::Object::Integer(page_refs.len() as i64));
+
+    let pages_id = output_doc.add_object(pages_dict);
+
+    // Create Catalog
+    let mut catalog = lopdf::Dictionary::new();
+    catalog.set(b"Type", lopdf::Object::Name(b"Catalog".to_vec()));
+    catalog.set(b"Pages", lopdf::Object::Reference(pages_id));
+
+    let catalog_id = output_doc.add_object(catalog);
+    output_doc.trailer.set(b"Root", lopdf::Object::Reference(catalog_id));
 
     progress(Progress::new(80.0, "Saving output...", "extract_pages"));
 
@@ -51,7 +70,8 @@ pub fn run(
         std::fs::create_dir_all(parent).map_err(LpError::Io)?;
     }
 
-    LoPdfEngine::save_document(&mut new_doc, &opts.output_path)
+    output_doc.save(&opts.output_path)
+        .map(|_| ())
         .map_err(|e| LpError::PdfCorrupt(format!("Failed to save PDF: {}", e)))?;
 
     let processing_time = start.elapsed().as_millis() as u64;
@@ -61,13 +81,12 @@ pub fn run(
 
     progress(Progress::new(100.0, "Pages extracted!", "extract_pages"));
 
-    // Returns empty document for now - full implementation would include the extracted pages
     Ok(JobOutput::new(
         opts.output_path.clone(),
         file_size,
         processing_time,
     )
-    .with_page_count(0))
+    .with_page_count(page_refs.len() as u32))
 }
 
 #[cfg(test)]
