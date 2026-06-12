@@ -87,6 +87,28 @@ pub enum Commands {
 
     /// Display PDF metadata
     Info(InfoOptions),
+
+    /// Generate shell completions
+    Completions(CompletionsOptions),
+
+    /// Update localpdf CLI to the latest version
+    Update,
+}
+
+// === Completions ===
+#[derive(Parser)]
+pub struct CompletionsOptions {
+    /// Shell type to generate completions for
+    #[arg(value_enum)]
+    pub shell: ShellType,
+}
+
+#[derive(ValueEnum, Clone, Debug)]
+pub enum ShellType {
+    Bash,
+    Zsh,
+    Fish,
+    PowerShell,
 }
 
 // === Merge ===

@@ -13,7 +13,6 @@ type TargetFormat = 'pdf' | 'docx' | 'xlsx' | 'pptx' | 'jpg' | 'png' | 'html';
 
 export const ConvertTool: React.FC<ConvertToolProps> = ({ onBack }) => {
   const [targetFormat, setTargetFormat] = useState<TargetFormat>('docx');
-  const [isPdfInput] = useState(true);
   const [dpi, setDpi] = useState<number>(300);
   const [quality, setQuality] = useState<number>(85);
   const { t } = useTranslation();
@@ -22,19 +21,22 @@ export const ConvertTool: React.FC<ConvertToolProps> = ({ onBack }) => {
   const handleConvert = async (files: SelectedFile[], setProgress: (pct: number, msg?: string) => void) => {
     if (files.length === 0) throw new Error('No file selected');
     
+    const isPdfInput = files[0].path.toLowerCase().endsWith('.pdf');
+    const actualTargetFormat = isPdfInput ? targetFormat : 'pdf';
+
     setProgress(10, 'Getting temporary directory...');
     const tempDir = await tauriAdapter.getTempDir();
     
     setProgress(30, 'Preparing conversion buffers...');
     const file = files[0];
-    const ext = targetFormat.toLowerCase();
+    const ext = actualTargetFormat.toLowerCase();
     const outputPath = `${tempDir}\\converted_${Date.now()}.${ext}`;
     
-    setProgress(55, `Running converter to ${targetFormat.toUpperCase()}...`);
+    setProgress(55, `Running converter to ${actualTargetFormat.toUpperCase()}...`);
     const resultPath = await tauriAdapter.convert(
       file.path,
       outputPath,
-      targetFormat,
+      actualTargetFormat,
       dpi,
       quality,
       true
@@ -53,13 +55,15 @@ export const ConvertTool: React.FC<ConvertToolProps> = ({ onBack }) => {
       acceptExtensions={['pdf', 'docx', 'xlsx', 'pptx', 'jpg', 'png', 'html']}
       onRun={handleConvert}
       onBack={onBack}
-      optionsPanel={
+      optionsPanel={(files) => {
+        const isPdfInput = files.length === 0 || files[0].path.toLowerCase().endsWith('.pdf');
+        return (
         <div className="space-y-4">
           {/* Dynamic instruction based on file selection */}
           <div className="p-3 bg-white dark:bg-zinc-900/30 border border-zinc-200 dark:border-zinc-800 rounded-xl text-center">
             <span className="text-[9px] text-zinc-400 dark:text-zinc-500 font-bold uppercase block tracking-wider">{t('options.conversionFlow')}</span>
             <span className="text-xs text-zinc-800 dark:text-zinc-200 font-bold block mt-1">
-              {isPdfInput ? 'PDF → Office / Images' : 'Office / Image → PDF'}
+              {isPdfInput ? 'PDF → Office / Images' : 'Office / Image / Web → PDF'}
             </span>
           </div>
 
@@ -142,7 +146,7 @@ export const ConvertTool: React.FC<ConvertToolProps> = ({ onBack }) => {
             </div>
           </div>
 
-          {(targetFormat === 'jpg' || targetFormat === 'png') && (
+          {isPdfInput && (targetFormat === 'jpg' || targetFormat === 'png') && (
             <div className="p-3 bg-white dark:bg-zinc-900/30 border border-zinc-200 dark:border-zinc-800 rounded-xl space-y-3">
               <span className="text-[10px] text-zinc-500 dark:text-zinc-400 font-bold block">{t('options.imageOptions')}</span>
               <div className="space-y-1">
@@ -182,7 +186,8 @@ export const ConvertTool: React.FC<ConvertToolProps> = ({ onBack }) => {
             </div>
           )}
         </div>
-      }
+        );
+      }}
     />
   );
 };

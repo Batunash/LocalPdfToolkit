@@ -26,13 +26,6 @@
       "wix": {
         "language": "en-US"
       }
-    },
-    "macos": {
-      "dmg": {
-        "appPosition": { "x": 180, "y": 140 },
-        "applicationFolderPosition": { "x": 480, "y": 140 },
-        "windowSize": { "width": 660, "height": 400 }
-      }
     }
   },
   "app": {

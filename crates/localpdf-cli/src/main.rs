@@ -1,177 +1,11 @@
-use clap::{Parser, Subcommand, ValueEnum};
+mod cli;
+mod update;
+
+use clap::Parser;
+use std::time::Instant;
+use cli::{Cli, Commands};
 use clap_complete::{generate, Shell};
 use std::io;
-use std::path::PathBuf;
-use std::time::Instant;
-
-/// LocalPDF Toolkit - A modern, offline PDF utility tool
-#[derive(Parser)]
-#[command(name = "localpdf")]
-#[command(author = "Batuhan")]
-#[command(version = "0.1.0")]
-#[command(about = "Local PDF Toolkit - Offline PDF utilities", long_about = None)]
-struct Cli {
-    /// Enable verbose output
-    #[arg(short, long, global = true)]
-    verbose: bool,
-
-    /// Quiet mode - only show errors
-    #[arg(short, long, global = true)]
-    quiet: bool,
-
-    /// Output file path
-    #[arg(short, long, global = true)]
-    output: Option<PathBuf>,
-
-    /// JSON output mode
-    #[arg(long, global = true)]
-    json: bool,
-
-    #[command(subcommand)]
-    command: Commands,
-}
-
-#[derive(Subcommand)]
-enum Commands {
-    /// Generate shell completions
-    Completions {
-        /// Shell type to generate completions for
-        #[arg(value_enum)]
-        shell: ShellType,
-    },
-    /// Merge multiple PDF files into one
-    Merge {
-        /// Input PDF files
-        #[arg(required = true)]
-        inputs: Vec<PathBuf>,
-    },
-    /// Split a PDF into multiple files
-    Split {
-        /// Input PDF file
-        input: PathBuf,
-        /// Split mode
-        #[arg(short, long, default_value = "ranges")]
-        mode: SplitMode,
-        /// Page ranges (e.g., 1-3,5,7-10)
-        #[arg(short, long)]
-        ranges: Option<String>,
-    },
-    /// Remove pages from a PDF
-    Remove {
-        /// Input PDF file
-        input: PathBuf,
-        /// Pages to remove
-        #[arg(short, long)]
-        pages: String,
-    },
-    /// Extract specific pages from a PDF
-    Extract {
-        /// Input PDF file
-        input: PathBuf,
-        /// Pages to extract
-        #[arg(short, long)]
-        pages: String,
-    },
-    /// Compress a PDF to reduce file size
-    Compress {
-        /// Input PDF file
-        input: PathBuf,
-        /// Compression level
-        #[arg(short, long, default_value = "balanced")]
-        level: CompressionLevel,
-    },
-    /// Rotate PDF pages
-    Rotate {
-        /// Input PDF file
-        input: PathBuf,
-        /// Rotation angle in degrees
-        #[arg(short, long, default_value = "90")]
-        angle: u32,
-    },
-    /// Add password protection to PDF
-    Protect {
-        /// Input PDF file
-        input: PathBuf,
-        /// Password for encryption
-        #[arg(short, long)]
-        password: String,
-    },
-    /// Remove password from PDF
-    Unlock {
-        /// Input PDF file
-        input: PathBuf,
-        /// Password for decryption
-        #[arg(short, long)]
-        password: String,
-    },
-    /// Perform OCR on a scanned PDF
-    Ocr {
-        /// Input PDF file
-        input: PathBuf,
-        /// OCR language
-        #[arg(short, long, default_value = "eng")]
-        language: String,
-    },
-    /// Show PDF information
-    Info {
-        /// Input PDF file
-        input: PathBuf,
-    },
-    /// Convert PDF to another format or vice versa
-    Convert {
-        /// Input file
-        input: PathBuf,
-        /// Target format
-        #[arg(short, long)]
-        to: ConvertFormat,
-    },
-}
-
-#[derive(ValueEnum, Clone, Debug)]
-enum ShellType {
-    Bash,
-    Zsh,
-    Fish,
-    PowerShell,
-}
-
-#[derive(ValueEnum, Clone, Debug)]
-enum SplitMode {
-    Ranges,
-    EveryN,
-    BySize,
-}
-
-#[derive(ValueEnum, Clone, Debug)]
-enum CompressionLevel {
-    Extreme,
-    High,
-    Balanced,
-    Low,
-}
-
-#[derive(ValueEnum, Clone, Debug)]
-enum ConvertFormat {
-    Docx,
-    Xlsx,
-    Pptx,
-    Html,
-    Jpg,
-    Png,
-    Pdf,
-}
-
-fn print_completions(shell: ShellType) {
-    use clap::CommandFactory;
-    let mut cmd = Cli::command();
-    let shell = match shell {
-        ShellType::Bash => Shell::Bash,
-        ShellType::Zsh => Shell::Zsh,
-        ShellType::Fish => Shell::Fish,
-        ShellType::PowerShell => Shell::PowerShell,
-    };
-    generate(shell, &mut cmd, "localpdf", &mut io::stdout());
-}
 
 fn print_success(message: &str, quiet: bool) {
     if !quiet {
@@ -179,7 +13,7 @@ fn print_success(message: &str, quiet: bool) {
     }
 }
 
-fn measure_time<F: FnOnce() -> anyhow::Result<()>>(quiet: bool, f: F) -> anyhow::Result<()> {
+fn measure_time<F: FnOnce() -> Result<(), Box<dyn std::error::Error>>>(quiet: bool, f: F) -> Result<(), Box<dyn std::error::Error>> {
     let start = Instant::now();
     f()?;
     let duration = start.elapsed();
@@ -189,87 +23,141 @@ fn measure_time<F: FnOnce() -> anyhow::Result<()>>(quiet: bool, f: F) -> anyhow:
     Ok(())
 }
 
-#[tokio::main]
-async fn main() -> anyhow::Result<()> {
-    let cli = Cli::parse();
+fn print_completions(shell: cli::ShellType) {
+    use clap::CommandFactory;
+    let mut cmd = Cli::command();
+    let clap_shell = match shell {
+        cli::ShellType::Bash => Shell::Bash,
+        cli::ShellType::Zsh => Shell::Zsh,
+        cli::ShellType::Fish => Shell::Fish,
+        cli::ShellType::PowerShell => Shell::PowerShell,
+    };
+    generate(clap_shell, &mut cmd, "localpdf", &mut io::stdout());
+}
 
-    match cli.command {
-        Commands::Completions { shell } => {
-            print_completions(shell);
-        }
-        Commands::Merge { inputs } => {
-            measure_time(cli.quiet, || {
-                print_success(&format!("Merging {} files...", inputs.len()), cli.quiet);
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let cli_opts = Cli::parse();
+    
+    match cli_opts.command {
+        Commands::Merge(opts) => {
+            measure_time(cli_opts.quiet, || {
+                print_success(&format!("Merging {} files...", opts.input_files.len()), cli_opts.quiet);
+                cli::run_merge(opts, cli_opts.verbose, cli_opts.quiet, cli_opts.json, cli_opts.overwrite)?;
                 Ok(())
             })?;
         }
-        Commands::Split { input, mode, ranges } => {
-            measure_time(cli.quiet, || {
-                print_success(&format!("Splitting: {}", input.display()), cli.quiet);
-                println!("Mode: {:?}", mode);
-                if let Some(r) = ranges {
-                    println!("Ranges: {}", r);
-                }
+        Commands::Split(opts) => {
+            measure_time(cli_opts.quiet, || {
+                print_success(&format!("Splitting: {}", opts.input_file.display()), cli_opts.quiet);
+                cli::run_split(opts, cli_opts.verbose, cli_opts.quiet, cli_opts.json, cli_opts.overwrite)?;
                 Ok(())
             })?;
         }
-        Commands::Remove { input, pages } => {
-            measure_time(cli.quiet, || {
-                print_success(&format!("Removing pages: {}", input.display()), cli.quiet);
-                println!("Pages: {}", pages);
+        Commands::Remove(opts) => {
+            measure_time(cli_opts.quiet, || {
+                print_success(&format!("Removing pages: {}", opts.input_file.display()), cli_opts.quiet);
+                cli::run_remove(opts, cli_opts.verbose, cli_opts.quiet, cli_opts.json, cli_opts.overwrite)?;
                 Ok(())
             })?;
         }
-        Commands::Extract { input, pages } => {
-            measure_time(cli.quiet, || {
-                print_success(&format!("Extracting pages: {}", input.display()), cli.quiet);
-                println!("Pages: {}", pages);
+        Commands::Extract(opts) => {
+            measure_time(cli_opts.quiet, || {
+                print_success(&format!("Extracting pages: {}", opts.input_file.display()), cli_opts.quiet);
+                cli::run_extract(opts, cli_opts.verbose, cli_opts.quiet, cli_opts.json, cli_opts.overwrite)?;
                 Ok(())
             })?;
         }
-        Commands::Compress { input, level } => {
-            measure_time(cli.quiet, || {
-                print_success(&format!("Compressing: {}", input.display()), cli.quiet);
-                println!("Level: {:?}", level);
+        Commands::Organize(opts) => {
+            measure_time(cli_opts.quiet, || {
+                print_success(&format!("Organizing: {}", opts.input_file.display()), cli_opts.quiet);
+                cli::run_organize(opts, cli_opts.verbose, cli_opts.quiet, cli_opts.json, cli_opts.overwrite)?;
                 Ok(())
             })?;
         }
-        Commands::Rotate { input, angle } => {
-            measure_time(cli.quiet, || {
-                print_success(&format!("Rotating: {}", input.display()), cli.quiet);
-                println!("Angle: {} deg", angle);
+        Commands::Compress(opts) => {
+            measure_time(cli_opts.quiet, || {
+                print_success(&format!("Compressing: {}", opts.input_file.display()), cli_opts.quiet);
+                cli::run_compress(opts, cli_opts.verbose, cli_opts.quiet, cli_opts.json, cli_opts.overwrite)?;
                 Ok(())
             })?;
         }
-        Commands::Protect { input, password: _ } => {
-            measure_time(cli.quiet, || {
-                print_success(&format!("Protecting: {}", input.display()), cli.quiet);
+        Commands::Rotate(opts) => {
+            measure_time(cli_opts.quiet, || {
+                print_success(&format!("Rotating: {}", opts.input_file.display()), cli_opts.quiet);
+                cli::run_rotate(opts, cli_opts.verbose, cli_opts.quiet, cli_opts.json, cli_opts.overwrite)?;
                 Ok(())
             })?;
         }
-        Commands::Unlock { input, password: _ } => {
-            measure_time(cli.quiet, || {
-                print_success(&format!("Unlocking: {}", input.display()), cli.quiet);
+        Commands::Watermark(opts) => {
+            measure_time(cli_opts.quiet, || {
+                print_success(&format!("Watermarking: {}", opts.input_file.display()), cli_opts.quiet);
+                cli::run_watermark(opts, cli_opts.verbose, cli_opts.quiet, cli_opts.json, cli_opts.overwrite)?;
                 Ok(())
             })?;
         }
-        Commands::Ocr { input, language } => {
-            measure_time(cli.quiet, || {
-                print_success(&format!("OCR: {}", input.display()), cli.quiet);
-                println!("Language: {}", language);
+        Commands::PageNumbers(opts) => {
+            measure_time(cli_opts.quiet, || {
+                print_success(&format!("Page Numbers: {}", opts.input_file.display()), cli_opts.quiet);
+                cli::run_page_numbers(opts, cli_opts.verbose, cli_opts.quiet, cli_opts.json, cli_opts.overwrite)?;
                 Ok(())
             })?;
         }
-        Commands::Info { input } => {
-            measure_time(cli.quiet, || {
-                print_success(&format!("Info: {}", input.display()), cli.quiet);
+        Commands::Crop(opts) => {
+            measure_time(cli_opts.quiet, || {
+                print_success(&format!("Cropping: {}", opts.input_file.display()), cli_opts.quiet);
+                cli::run_crop(opts, cli_opts.verbose, cli_opts.quiet, cli_opts.json, cli_opts.overwrite)?;
                 Ok(())
             })?;
         }
-        Commands::Convert { input, to } => {
-            measure_time(cli.quiet, || {
-                print_success(&format!("Converting: {}", input.display()), cli.quiet);
-                println!("To: {:?}", to);
+        Commands::Protect(opts) => {
+            measure_time(cli_opts.quiet, || {
+                print_success(&format!("Protecting: {}", opts.input_file.display()), cli_opts.quiet);
+                cli::run_protect(opts, cli_opts.verbose, cli_opts.quiet, cli_opts.json, cli_opts.overwrite)?;
+                Ok(())
+            })?;
+        }
+        Commands::Unlock(opts) => {
+            measure_time(cli_opts.quiet, || {
+                print_success(&format!("Unlocking: {}", opts.input_file.display()), cli_opts.quiet);
+                cli::run_unlock(opts, cli_opts.verbose, cli_opts.quiet, cli_opts.json, cli_opts.overwrite)?;
+                Ok(())
+            })?;
+        }
+        Commands::Repair(opts) => {
+            measure_time(cli_opts.quiet, || {
+                print_success(&format!("Repairing: {}", opts.input_file.display()), cli_opts.quiet);
+                cli::run_repair(opts, cli_opts.verbose, cli_opts.quiet, cli_opts.json, cli_opts.overwrite)?;
+                Ok(())
+            })?;
+        }
+        Commands::Ocr(opts) => {
+            measure_time(cli_opts.quiet, || {
+                print_success(&format!("OCR: {}", opts.input_file.display()), cli_opts.quiet);
+                cli::run_ocr(opts, cli_opts.verbose, cli_opts.quiet, cli_opts.json, cli_opts.overwrite)?;
+                Ok(())
+            })?;
+        }
+        Commands::Info(opts) => {
+            measure_time(cli_opts.quiet, || {
+                print_success(&format!("Info: {}", opts.input_file.display()), cli_opts.quiet);
+                cli::run_info(opts, cli_opts.verbose, cli_opts.quiet, cli_opts.json)?;
+                Ok(())
+            })?;
+        }
+        Commands::Convert(opts) => {
+            measure_time(cli_opts.quiet, || {
+                print_success(&format!("Converting: {}", opts.input_file.display()), cli_opts.quiet);
+                cli::run_convert(opts, cli_opts.verbose, cli_opts.quiet, cli_opts.json, cli_opts.overwrite)?;
+                Ok(())
+            })?;
+        }
+        Commands::Completions(opts) => {
+            print_completions(opts.shell);
+        }
+        Commands::Update => {
+            measure_time(cli_opts.quiet, || {
+                update::check_for_updates(cli_opts.quiet)?;
                 Ok(())
             })?;
         }

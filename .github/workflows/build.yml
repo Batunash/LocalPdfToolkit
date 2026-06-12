@@ -30,7 +30,7 @@ jobs:
 
       - name: Install LLVM (Windows)
         if: matrix.os == 'windows-latest'
-        uses:KyleMayes/install-llvm-action@v2
+        uses: KyleMayes/install-llvm-action@v2
         with:
           version: "16"
           directory: ${{ runner.temp }}/llvm
@@ -46,6 +46,10 @@ jobs:
 
       - name: Run tests
         run: cargo test --workspace
+
+      - name: Install UI dependencies
+        run: npm install
+        working-directory: ./ui
 
       - name: Build Tauri app
         run: cargo tauri build

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { SelectedFile, PageId } from '../types';
 import { DropZone } from './DropZone';
+import { BatchDropZone } from './BatchDropZone';
 import { tauriAdapter } from '../adapters/tauriAdapter';
 import { useTranslation } from '../i18n';
 import * as Icons from 'lucide-react';
@@ -238,12 +239,20 @@ export const ToolWrapper: React.FC<ToolWrapperProps> = ({
                 </div>
               ) : (
                 <div className="flex-1 flex items-center justify-center">
-                  <DropZone
-                    onFilesSelected={handleFilesSelected}
-                    multiple={multipleFiles}
-                    acceptExtensions={acceptExtensions}
-                    descriptionText={t('common.dropzoneText')}
-                  />
+                  {multipleFiles ? (
+                    <BatchDropZone
+                      onFilesSelected={handleFilesSelected}
+                      acceptExtensions={acceptExtensions}
+                      descriptionText={t('common.dropzoneText')}
+                    />
+                  ) : (
+                    <DropZone
+                      onFilesSelected={handleFilesSelected}
+                      multiple={false}
+                      acceptExtensions={acceptExtensions}
+                      descriptionText={t('common.dropzoneText')}
+                    />
+                  )}
                 </div>
               )}
 
@@ -313,7 +322,9 @@ export const ToolWrapper: React.FC<ToolWrapperProps> = ({
                               const info = await tauriAdapter.getPdfInfo(filePath);
                               pages = info.pages;
                               size = info.sizeBytes;
-                            } catch (e) {}
+                            } catch (e) {
+                              console.warn("Failed to get file info:", e);
+                            }
                             return { name, path: filePath, size, pages };
                           }));
                           handleFilesSelected(loaded);
