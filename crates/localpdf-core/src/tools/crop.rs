@@ -79,7 +79,7 @@ pub fn run(opts: &CropOpts, progress: &dyn Fn(Progress)) -> Result<JobOutput, Lp
 
             output_doc.objects.insert(new_id, new_page);
             page_refs.push(lopdf::Object::Reference(new_id));
-            let _ = page_num; // Page number available for progress tracking
+            let _ = page_num; // Available for progress tracking in enhanced implementation
         }
     }
 

@@ -16,7 +16,7 @@ repository = "https://github.com/okullubatuhan/localpdf"
 
 # Prefer lopdf for PDF manipulation (pure Rust)
 lopdf = "0.34"
-printpdf = "0.7"
+printpdf = "0.5"
 
 # Image processing
 image = "0.25"

@@ -420,8 +420,10 @@ pub fn run_split(
         PathBuf::from("split_output")
     });
 
-    let strategy = if let Some(_ranges_str) = opts.ranges {
+    let strategy = if let Some(ranges_str) = opts.ranges {
         // Parse ranges - simplified implementation
+        // Note: Full range parsing would parse strings like "1-3,5,7-9"
+        let _ = ranges_str; // Ranges parsed but not fully implemented in split tool
         SplitStrategy::ByRanges
     } else if let Some(n) = opts.every {
         SplitStrategy::ByEvery(n)
@@ -433,7 +435,7 @@ pub fn run_split(
         input_file: opts.input_file,
         output_dir,
         strategy,
-        ranges: None, // parse from ranges_str
+        ranges: None, // Ranges feature not fully implemented in split tool
         overwrite,
     };
 

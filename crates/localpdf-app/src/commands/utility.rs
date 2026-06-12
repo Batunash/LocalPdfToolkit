@@ -18,7 +18,7 @@ pub async fn clean_temp(app_state: State<'_, AppState>) -> Result<u64, String> {
         drop(temp_guard);
         let count = count_entries(&path);
 
-        let _ = std::fs::remove_dir_all(&path);
+        let _ = std::fs::remove_dir_all(&path); // Silently ignore cleanup failures
 
         Ok(count)
     } else {

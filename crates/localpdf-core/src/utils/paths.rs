@@ -47,7 +47,7 @@ pub fn validate_output_path(path: &Path, overwrite: bool) -> Result<PathBuf, LpE
 
     path.canonicalize()
         .or_else(|e: std::io::Error| -> Result<PathBuf, LpError> {
-            let _ = e;
+            log::warn!("Failed to canonicalize path {:?}: {}", path, e);
             Ok(path.to_path_buf())
         })
 }
@@ -117,6 +117,8 @@ impl TempDir {
 
 impl Drop for TempDir {
     fn drop(&mut self) {
-        let _ = fs::remove_dir_all(&self.path);
+        if let Err(e) = fs::remove_dir_all(&self.path) {
+            log::warn!("Failed to remove temp directory {:?}: {}", self.path, e);
+        }
     }
 }

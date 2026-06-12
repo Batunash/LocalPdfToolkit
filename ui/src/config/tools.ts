@@ -1,4 +1,5 @@
 import type { ToolDefinition } from '../types';
+export type { ToolDefinition } from '../types';
 
 export const TOOLS: ToolDefinition[] = [
   // Organize Category

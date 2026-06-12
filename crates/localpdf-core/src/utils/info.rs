@@ -72,7 +72,9 @@ pub fn get_pdf_info(input_file: &PathBuf) -> Result<PdfInfo, LpError> {
                 page_sizes,
                 encrypted: doc.is_encrypted(),
                 pdf_version,
-                creator: None, // Metadata extraction requires complex parsing
+                // Note: lopdf 0.34 دارد محدودیت‌هایی در metadata extraction
+                // A full implementation requires direct trailer dictionary parsing
+                creator: None,
                 producer: None,
                 creation_date: None,
                 modification_date: None,

@@ -100,7 +100,12 @@ export const translations = {
     'options.marginsUnit': 'Margins Unit',
     'options.cropMargins': 'Crop Margin Offsets',
     'options.repairDesc': 'No specific parameters are required. The offline engine will attempt to reconstruct damaged tables.',
-    
+
+    // Command Palette
+    'commandPalette.placeholder': 'Type a command or search for a tool...',
+    'commandPalette.noResults': 'No results found',
+    'commandPalette.noRecent': 'No recent files',
+
     // Detailed Tools
     'tools.merge.title': 'Merge PDF',
     'tools.merge.desc': 'Combine multiple PDF files into one single document easily.',
@@ -269,7 +274,10 @@ export const translations = {
     'options.marginsUnit': 'Kenar Boşluğu Birimi',
     'options.cropMargins': 'Kırpma Kenar Boşlukları',
     'options.repairDesc': 'Özel bir parametre gerekmez. Çevrimdışı motor bozuk PDF yapılarını onarmaya çalışacaktır.',
-    
+    // Command Palette
+    'commandPalette.placeholder': 'Komut yazın veya araç arayın...',
+    'commandPalette.noResults': 'Sonuç bulunamadı',
+    'commandPalette.noRecent': 'Son dosya yok',
     // Detailed Tools
     'tools.merge.title': 'PDF Birleştir',
     'tools.merge.desc': 'Birden fazla PDF dosyasını kolayca tek bir belgede birleştirin.',

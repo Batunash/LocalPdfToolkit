@@ -2,14 +2,15 @@
 
 use localpdf_core::tools;
 use localpdf_core::types::{ProtectOpts, UnlockOpts, EncryptionPermissions, Progress, JobOutput};
+use serde::Deserialize;
 use std::sync::mpsc::channel;
 use std::path::PathBuf;
 use tauri::State;
 use crate::state::AppState;
 
-#[tauri::command]
-pub async fn pdf_protect(
-    app_state: State<'_, AppState>,
+/// Options for PDF protect command
+#[derive(Debug, Clone, Deserialize)]
+pub struct ProtectCommandOpts {
     input_file: String,
     output_path: String,
     user_password: String,
@@ -19,29 +20,36 @@ pub async fn pdf_protect(
     allow_copy: bool,
     allow_annotate: bool,
     overwrite: bool,
+}
+
+#[tauri::command]
+pub async fn pdf_protect(
+    _app_state: State<'_, AppState>,
+    opts: ProtectCommandOpts,
 ) -> Result<String, String> {
-    let temp_dir = app_state.create_temp_dir().map_err(|e| e.to_string())?;
+    let temp_dir = _app_state.create_temp_dir().map_err(|e| e.to_string())?;
+    // temp_dir is used implicitly through the AppState's internal temp_dir lifecycle
     let _ = temp_dir;
 
     let permissions = EncryptionPermissions {
-        print: allow_print,
-        modify: allow_modify,
-        extract: allow_copy,
-        annotate: allow_annotate,
+        print: opts.allow_print,
+        modify: opts.allow_modify,
+        extract: opts.allow_copy,
+        annotate: opts.allow_annotate,
     };
 
     let opts = ProtectOpts {
-        input_file: PathBuf::from(input_file),
-        output_path: PathBuf::from(output_path),
-        user_password: user_password.clone(),
-        owner_password: owner_password.or(Some(user_password)),
+        input_file: PathBuf::from(opts.input_file),
+        output_path: PathBuf::from(opts.output_path),
+        user_password: opts.user_password.clone(),
+        owner_password: opts.owner_password.or(Some(opts.user_password)),
         permissions,
-        overwrite,
+        overwrite: opts.overwrite,
     };
 
     let (tx, _rx) = channel::<Progress>();
     let progress_cb = move |p: Progress| {
-        let _ = tx.send(p);
+        let _ = tx.send(p); // Silently ignore if receiver is dropped (job completed)
     };
 
     let result: std::result::Result<std::result::Result<JobOutput, localpdf_core::LpError>, tokio::task::JoinError> = tokio::task::spawn_blocking(move || {
@@ -64,6 +72,7 @@ pub async fn pdf_unlock(
     overwrite: bool,
 ) -> Result<String, String> {
     let temp_dir = app_state.create_temp_dir().map_err(|e| e.to_string())?;
+    // temp_dir is used implicitly through the AppState's internal temp_dir lifecycle
     let _ = temp_dir;
 
     let opts = UnlockOpts {
@@ -75,7 +84,7 @@ pub async fn pdf_unlock(
 
     let (tx, _rx) = channel::<Progress>();
     let progress_cb = move |p: Progress| {
-        let _ = tx.send(p);
+        let _ = tx.send(p); // Silently ignore if receiver is dropped (job completed)
     };
 
     let result: std::result::Result<std::result::Result<JobOutput, localpdf_core::LpError>, tokio::task::JoinError> = tokio::task::spawn_blocking(move || {

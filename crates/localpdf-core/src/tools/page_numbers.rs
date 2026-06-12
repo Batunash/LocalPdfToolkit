@@ -48,7 +48,7 @@ pub fn run(
             page_refs.push(lopdf::Object::Reference(new_id));
 
             // Note: Page number would be added here via content stream modification
-            let _ = page_num; // Used in full implementation
+            let _ = page_num; // Used for progress tracking in enhanced implementation
         }
     }
 

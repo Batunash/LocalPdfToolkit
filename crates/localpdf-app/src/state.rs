@@ -74,6 +74,7 @@ impl AppState {
             *job.progress.write().unwrap() = progress;
             *job.status.write().unwrap() = status.to_string();
         }
+        // Silently ignore if job not found - job may have been completed or removed
     }
 
     #[allow(dead_code)]

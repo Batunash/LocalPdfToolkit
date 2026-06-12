@@ -5,6 +5,8 @@ import { TOOLS } from '../config/tools';
 import { tauriAdapter } from '../adapters/tauriAdapter';
 import { useTranslation } from '../i18n';
 import type { Language } from '../i18n';
+import { CommandPalette } from './CommandPalette';
+import { SettingsDrawer } from './SettingsDrawer';
 
 // Dynamic Icon rendering utility
 export const DynamicIcon = ({ name, className }: { name: string; className?: string }) => {
@@ -23,7 +25,9 @@ export const Layout: React.FC<LayoutProps> = ({ children, activePage, onNavigate
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [appVersion, setAppVersion] = useState('0.1.0');
   const [isCleaning, setIsCleaning] = useState(false);
-  
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
   // Theme state: light or dark
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const saved = localStorage.getItem('localpdf_theme');
@@ -34,6 +38,18 @@ export const Layout: React.FC<LayoutProps> = ({ children, activePage, onNavigate
 
   useEffect(() => {
     tauriAdapter.appVersion().then(setAppVersion);
+  }, []);
+
+  // Global keyboard shortcut for command palette
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.key === 'k') {
+        e.preventDefault();
+        setCommandPaletteOpen(true);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   const toggleTheme = () => {
@@ -206,6 +222,13 @@ export const Layout: React.FC<LayoutProps> = ({ children, activePage, onNavigate
               {theme === 'dark' ? <Icons.Sun className="w-3.5 h-3.5" /> : <Icons.Moon className="w-3.5 h-3.5" />}
             </button>
             <button
+              onClick={() => setSettingsOpen(true)}
+              title="Settings"
+              className="p-2 rounded-lg border border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-850 cursor-pointer flex items-center justify-center flex-1"
+            >
+              <Icons.Settings className="w-3.5 h-3.5" />
+            </button>
+            <button
               onClick={toggleLanguage}
               title="Switch Language"
               className="px-2 py-1 text-[10px] font-bold uppercase rounded-lg border border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-850 cursor-pointer flex-1 text-center"
@@ -245,6 +268,19 @@ export const Layout: React.FC<LayoutProps> = ({ children, activePage, onNavigate
           {children}
         </div>
       </main>
+
+      {/* Command Palette */}
+      <CommandPalette
+        open={commandPaletteOpen}
+        onClose={() => setCommandPaletteOpen(false)}
+        onNavigate={(pageId) => onNavigate(pageId as PageId)}
+      />
+
+      {/* Settings Drawer */}
+      <SettingsDrawer
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+      />
     </div>
   );
 };

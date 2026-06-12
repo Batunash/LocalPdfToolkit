@@ -6,6 +6,11 @@ use lopdf::Document;
 use std::time::Instant;
 
 /// Encrypt PDF with password protection
+///
+/// Note: This is a stub implementation. Full PDF encryption requires:
+/// - A library with complete encryption support (lopdf 0.34 has limited support)
+/// - External tools like qpdf or ghostscript
+/// - Manual implementation of PDF encryption spec (RC4/AES)
 pub fn run(
     opts: &ProtectOpts,
     progress: &dyn Fn(Progress),
@@ -22,9 +27,9 @@ pub fn run(
             e
         )))?;
 
-    let page_count = LoPdfEngine::page_count(&source_doc);
+    let page_count = source_doc.get_pages().len();
 
-    progress(Progress::new(20.0, "Applying encryption...", "protect"));
+    progress(Progress::new(20.0, "Setting up protection...", "protect"));
 
     // Note: lopdf 0.34 has limited encryption support
     // The full implementation would require:
@@ -32,15 +37,19 @@ pub fn run(
     // 2. Generating O (owner) and U (user) entries
     // 3. Encrypting all objects with RC4 or AES
     //
-    // For now, we save the document which preserves it
-    // A production implementation would use a library like pdfdose
-    // or implement PDF encryption spec manually
+    // A production implementation would use:
+    // - A library like pdfdose for Rust-based encryption
+    // - External tools like qpdf --encrypt
+    // - ghostscript with encryption parameters
 
-    // For the current implementation, we'll note that encryption
-    // requires external tool integration (e.g., qpdf, ghostscript)
-    // or a more complete PDF library
+    progress(Progress::new(40.0, "Note: Full encryption requires external tool", "protect"));
 
-    progress(Progress::new(80.0, "Saving protected PDF...", "protect"));
+    // For now, save the document with a warning
+    // In production, this should either:
+    // 1. Implement proper encryption
+    // 2. Return an error explaining the limitation
+
+    progress(Progress::new(80.0, "Saving PDF...", "protect"));
 
     // Ensure parent directory exists
     if let Some(parent) = opts.output_path.parent() {
@@ -50,14 +59,14 @@ pub fn run(
     // Save the document (without encryption - stub limitation)
     source_doc.save(&opts.output_path)
         .map(|_| ())
-        .map_err(|e| LpError::PdfCorrupt(format!("Failed to save protected PDF: {}", e)))?;
+        .map_err(|e| LpError::PdfCorrupt(format!("Failed to save PDF: {}", e)))?;
 
     let processing_time = start.elapsed().as_millis() as u64;
     let file_size = std::fs::metadata(&opts.output_path)
         .map(|m| m.len())
         .unwrap_or(0);
 
-    progress(Progress::new(100.0, "PDF protection note: Full encryption requires external tool", "protect"));
+    progress(Progress::new(100.0, "PDF saved (encryption is a stub - requires external tool)", "protect"));
 
     Ok(JobOutput::new(
         opts.output_path.clone(),
@@ -66,9 +75,6 @@ pub fn run(
     )
     .with_page_count(page_count as u32))
 }
-
-// Re-export for internal use
-use crate::engine::LoPdfEngine;
 
 #[cfg(test)]
 mod tests {

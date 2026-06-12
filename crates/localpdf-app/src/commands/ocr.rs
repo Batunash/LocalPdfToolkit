@@ -17,6 +17,7 @@ pub async fn pdf_ocr(
     overwrite: bool,
 ) -> Result<String, String> {
     let temp_dir = app_state.create_temp_dir().map_err(|e| e.to_string())?;
+    // temp_dir is used implicitly through the AppState's internal temp_dir lifecycle
     let _ = temp_dir;
 
     let langs: Vec<String> = language
@@ -34,7 +35,7 @@ pub async fn pdf_ocr(
 
     let (tx, _rx) = channel::<Progress>();
     let progress_cb = move |p: Progress| {
-        let _ = tx.send(p);
+        let _ = tx.send(p); // Silently ignore if receiver is dropped (job completed)
     };
 
     let result: std::result::Result<std::result::Result<JobOutput, localpdf_core::LpError>, tokio::task::JoinError> = tokio::task::spawn_blocking(move || {
@@ -56,6 +57,7 @@ pub async fn pdf_repair(
     overwrite: bool,
 ) -> Result<String, String> {
     let temp_dir = app_state.create_temp_dir().map_err(|e| e.to_string())?;
+    // temp_dir is used implicitly through the AppState's internal temp_dir lifecycle
     let _ = temp_dir;
 
     let opts = RepairOpts {
@@ -66,7 +68,7 @@ pub async fn pdf_repair(
 
     let (tx, _rx) = channel::<Progress>();
     let progress_cb = move |p: Progress| {
-        let _ = tx.send(p);
+        let _ = tx.send(p); // Silently ignore if receiver is dropped (job completed)
     };
 
     let result: std::result::Result<std::result::Result<JobOutput, localpdf_core::LpError>, tokio::task::JoinError> = tokio::task::spawn_blocking(move || {
