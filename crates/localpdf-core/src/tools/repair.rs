@@ -16,7 +16,7 @@ pub fn run(opts: &RepairOpts, progress: &dyn Fn(Progress)) -> Result<JobOutput, 
         .map_err(|e| LpError::PdfCorrupt(format!("Failed to load PDF: {}", e)))?;
 
     let page_count = source_doc.get_pages().len();
-    progress(Progress::new(20.0, &format!("PDF has {} pages, attempting repair...", page_count), "repair"));
+    progress(Progress::new(20.0, format!("PDF has {} pages, attempting repair...", page_count), "repair"));
 
     // Repair strategies:
     // 1. Rebuild cross-reference table (lopdf does this on save)

@@ -50,7 +50,6 @@ pub fn validate_output_path(path: &Path, overwrite: bool) -> Result<PathBuf, LpE
             let _ = e;
             Ok(path.to_path_buf())
         })
-        .map_err(|e| e)
 }
 
 /// Check file size is within acceptable limits
@@ -75,6 +74,7 @@ pub fn check_disk_space(path: &Path, required_bytes: u64) -> Result<(), LpError>
         #[cfg(unix)]
         {
             use std::os::unix::fs::MetadataExt;
+            let parent = path.parent().unwrap();
             let metadata = fs::metadata(parent).map_err(LpError::Io)?;
             // Simplified check - real implementation would use filesystem stats
             let available = 1024 * 1024 * 1024; // Assume 1GB available for now

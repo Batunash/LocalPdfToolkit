@@ -22,7 +22,7 @@ pub fn run(
         )))?;
 
     let page_count = source_doc.get_pages().len();
-    progress(Progress::new(20.0, &format!("Applying watermark to {} pages", page_count), "watermark"));
+    progress(Progress::new(20.0, format!("Applying watermark to {} pages", page_count), "watermark"));
 
     // Note: Full watermark implementation would require:
     // 1. For text watermarks:
@@ -40,7 +40,7 @@ pub fn run(
     let source_pages = source_doc.get_pages();
     let mut page_refs: Vec<lopdf::Object> = Vec::new();
 
-    for (_page_num, page_obj_id) in &source_pages {
+    for page_obj_id in source_pages.values() {
         if let Ok(page_obj) = source_doc.get_object(*page_obj_id) {
             let new_id = output_doc.new_object_id();
             let new_page = page_obj.clone();
@@ -94,6 +94,7 @@ pub fn run(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::{WatermarkType, WatermarkPosition};
     use std::path::PathBuf;
 
     #[test]

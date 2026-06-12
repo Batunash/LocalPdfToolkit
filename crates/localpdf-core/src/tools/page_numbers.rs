@@ -22,7 +22,7 @@ pub fn run(
         )))?;
 
     let page_count = source_doc.get_pages().len();
-    progress(Progress::new(20.0, &format!("Adding page numbers to {} pages", page_count), "page_numbers"));
+    progress(Progress::new(20.0, format!("Adding page numbers to {} pages", page_count), "page_numbers"));
 
     // Note: Full page numbering implementation would require:
     // 1. For each page:
@@ -96,6 +96,7 @@ pub fn run(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::{PageNumPosition, PageNumFormat};
     use std::path::PathBuf;
 
     #[test]

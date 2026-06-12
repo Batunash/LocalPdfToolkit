@@ -12,7 +12,7 @@ pub fn get_pdf_info(input_file: &PathBuf) -> Result<PdfInfo, LpError> {
         .unwrap_or(0);
 
     // Try to load the document to get actual metadata
-    let page_count = match LoPdfHelper::load(input_file) {
+    let info = match LoPdfHelper::load(input_file) {
         Ok(doc) => {
             let count = LoPdfHelper::get_page_objs(&doc).len() as u32;
 
@@ -96,7 +96,7 @@ pub fn get_pdf_info(input_file: &PathBuf) -> Result<PdfInfo, LpError> {
         }
     };
 
-    Ok(page_count)
+    Ok(info)
 }
 
 fn format_bytes(bytes: u64) -> String {

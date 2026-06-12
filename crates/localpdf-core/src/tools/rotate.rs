@@ -30,7 +30,7 @@ pub fn run(
                 .collect()
         });
 
-    progress(Progress::new(20.0, &format!("Rotating pages",), "rotate"));
+    progress(Progress::new(20.0, "Rotating pages".to_string(), "rotate"));
 
     // Calculate the rotation angle in degrees
     let rotation_degrees = match opts.rotation {

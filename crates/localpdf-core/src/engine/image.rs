@@ -11,13 +11,13 @@ impl ImageHelper {
     /// Decode an image from a file
     pub fn decode(path: &Path) -> Result<DynamicImage, LpError> {
         image::open(path)
-            .map_err(|e| LpError::Image(e))
+            .map_err(LpError::Image)
     }
 
     /// Decode an image from bytes
     pub fn decode_bytes(bytes: &[u8]) -> Result<DynamicImage, LpError> {
         image::load_from_memory(bytes)
-            .map_err(|e| LpError::Image(e))
+            .map_err(LpError::Image)
     }
 
     /// Encode an image to JPEG
@@ -27,13 +27,13 @@ impl ImageHelper {
         _quality: u8,
     ) -> Result<(), LpError> {
         img.save_with_format(path, image::ImageFormat::Jpeg)
-            .map_err(|e| LpError::Image(e))
+            .map_err(LpError::Image)
     }
 
     /// Encode an image to PNG
     pub fn encode_png(img: &DynamicImage, path: &Path) -> Result<(), LpError> {
         img.save_with_format(path, image::ImageFormat::Png)
-            .map_err(|e| LpError::Image(e))
+            .map_err(LpError::Image)
     }
 
     /// Encode an image to bytes
@@ -43,7 +43,7 @@ impl ImageHelper {
     ) -> Result<Vec<u8>, LpError> {
         let mut buffer = Vec::new();
         img.write_to(&mut std::io::Cursor::new(&mut buffer), format)
-            .map_err(|e| LpError::Image(e))?;
+            .map_err(LpError::Image)?;
         Ok(buffer)
     }
 

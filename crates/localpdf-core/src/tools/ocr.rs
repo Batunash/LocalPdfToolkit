@@ -14,7 +14,7 @@ pub fn run(opts: &OcrOpts, progress: &dyn Fn(Progress)) -> Result<JobOutput, LpE
         .map_err(|e| LpError::PdfCorrupt(format!("Failed: {}", e)))?;
 
     let page_count = source_doc.get_pages().len();
-    progress(Progress::new(10.0, &format!("PDF has {} pages", page_count), "ocr"));
+    progress(Progress::new(10.0, format!("PDF has {} pages", page_count), "ocr"));
 
     // Note: Full OCR implementation requires:
     // 1. leptess (Tesseract bindings) for text recognition

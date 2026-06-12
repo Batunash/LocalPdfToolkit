@@ -48,9 +48,7 @@ impl LoPdfHelper {
 
     /// Get page object IDs (returns Vec of ObjectIds)
     pub fn get_page_objs(doc: &Document) -> Vec<lopdf::ObjectId> {
-        doc.get_pages()
-            .into_iter()
-            .map(|(_, id)| id)
+        doc.get_pages().into_values()
             .collect()
     }
 

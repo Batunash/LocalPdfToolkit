@@ -26,7 +26,7 @@ pub fn run(
         .map(|m| m.len())
         .unwrap_or(0);
 
-    progress(Progress::new(10.0, &format!("PDF has {} pages", page_count), "compress"));
+    progress(Progress::new(10.0, format!("PDF has {} pages", page_count), "compress"));
 
     // Get compression level
     let deflate_level = match opts.level {
@@ -64,7 +64,7 @@ pub fn run(
         0.0
     };
 
-    progress(Progress::new(100.0, &format!("Compression complete! Reduced by {:.1}%", compression_ratio), "compress"));
+    progress(Progress::new(100.0, format!("Compression complete! Reduced by {:.1}%", compression_ratio), "compress"));
 
     Ok(JobOutput::new(
         opts.output_path.clone(),

@@ -14,7 +14,7 @@ pub fn run(opts: &ConvertOpts, progress: &dyn Fn(Progress)) -> Result<JobOutput,
         .map_err(|e| LpError::PdfCorrupt(format!("Failed: {}", e)))?;
 
     let page_count = source_doc.get_pages().len();
-    progress(Progress::new(20.0, &format!("Converting to {:?}...", opts.target_format), "convert"));
+    progress(Progress::new(20.0, format!("Converting to {:?}...", opts.target_format), "convert"));
 
     // Note: Full format conversion requires additional dependencies:
     // - PDF to Images: pdfium-render or loompdf + image crate

@@ -3,7 +3,7 @@
 use crate::error::LpError;
 use crate::types::{JobOutput, Progress, SplitOpts, SplitStrategy, PageRange};
 use lopdf::Document;
-use std::path::PathBuf;
+use std::path::Path;
 use std::time::Instant;
 
 /// Split a PDF according to the specified strategy
@@ -23,7 +23,7 @@ pub fn run(
         )))?;
 
     let page_count = source_doc.get_pages().len();
-    progress(Progress::new(10.0, &format!("PDF has {} pages", page_count), "split"));
+    progress(Progress::new(10.0, format!("PDF has {} pages", page_count), "split"));
 
     // Ensure output directory exists
     std::fs::create_dir_all(&opts.output_dir).map_err(LpError::Io)?;
@@ -50,8 +50,8 @@ pub fn run(
 
 fn split_by_ranges(
     source_doc: &Document,
-    input_file: &PathBuf,
-    output_dir: &PathBuf,
+    input_file: &Path,
+    output_dir: &Path,
     ranges: &Option<Vec<PageRange>>,
     page_count: usize,
     progress: &dyn Fn(Progress),
@@ -66,7 +66,7 @@ fn split_by_ranges(
         let progress_pct = (idx as f32 / total as f32) * 100.0;
         progress(Progress::new(
             progress_pct,
-            &format!("Extracting pages {}-{}", range.start, range.end),
+            format!("Extracting pages {}-{}", range.start, range.end),
             "split",
         ));
 
@@ -82,8 +82,8 @@ fn split_by_ranges(
 
 fn split_by_every(
     source_doc: &Document,
-    input_file: &PathBuf,
-    output_dir: &PathBuf,
+    input_file: &Path,
+    output_dir: &Path,
     pages_per_file: u32,
     page_count: usize,
     progress: &dyn Fn(Progress),
@@ -99,7 +99,7 @@ fn split_by_every(
         let progress_pct = (part as f32 / num_parts as f32) * 100.0;
         progress(Progress::new(
             progress_pct,
-            &format!("Creating part {} of {}", part + 1, num_parts),
+            format!("Creating part {} of {}", part + 1, num_parts),
             "split",
         ));
 
@@ -116,8 +116,8 @@ fn split_by_every(
 
 fn split_by_size(
     source_doc: &Document,
-    input_file: &PathBuf,
-    output_dir: &PathBuf,
+    input_file: &Path,
+    output_dir: &Path,
     _target_size: u64,
     page_count: usize,
     progress: &dyn Fn(Progress),
@@ -139,8 +139,8 @@ fn split_by_size(
 /// Extract a range of pages from the source document
 fn extract_page_range(
     source_doc: &Document,
-    _input_file: &PathBuf,
-    output_path: &PathBuf,
+    _input_file: &Path,
+    output_path: &Path,
     start_page: u32,
     end_page: u32,
     _total_pages: usize,
@@ -161,15 +161,14 @@ fn extract_page_range(
     let mut page_count = 0;
 
     for page_num in start_page..=end_page {
-        if let Some(&page_obj_id) = source_pages.get(&page_num) {
-            if let Ok(page_obj) = source_doc.get_object(page_obj_id) {
+        if let Some(&page_obj_id) = source_pages.get(&page_num)
+            && let Ok(page_obj) = source_doc.get_object(page_obj_id) {
                 let new_id = output_doc.new_object_id();
                 let new_page = page_obj.clone();
                 output_doc.objects.insert(new_id, new_page);
                 page_refs.push(lopdf::Object::Reference(new_id));
                 page_count += 1;
             }
-        }
     }
 
     // Create Pages object with appropriate type
@@ -204,10 +203,10 @@ fn extract_page_range(
         .unwrap_or(0);
 
     let progress_pct = 90.0;
-    progress(Progress::new(progress_pct, &format!("Saved {} pages", page_count), "extract"));
+    progress(Progress::new(progress_pct, format!("Saved {} pages", page_count), "extract"));
 
     Ok(JobOutput::new(
-        output_path.clone(),
+        output_path.to_path_buf(),
         file_size,
         processing_time,
     )

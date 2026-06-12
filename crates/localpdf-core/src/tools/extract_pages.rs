@@ -29,7 +29,7 @@ pub fn run(
         .copied()
         .collect();
 
-    progress(Progress::new(20.0, &format!("Extracting {} pages", pages_to_extract.len()), "extract_pages"));
+    progress(Progress::new(20.0, format!("Extracting {} pages", pages_to_extract.len()), "extract_pages"));
 
     // Create a new document with only the extracted pages
     let mut output_doc = Document::with_version("1.7");
@@ -37,14 +37,13 @@ pub fn run(
     let mut page_refs: Vec<lopdf::Object> = Vec::new();
 
     for (page_num, page_obj_id) in &source_pages {
-        if pages_to_extract.contains(page_num) {
-            if let Ok(page_obj) = source_doc.get_object(*page_obj_id) {
+        if pages_to_extract.contains(page_num)
+            && let Ok(page_obj) = source_doc.get_object(*page_obj_id) {
                 let new_id = output_doc.new_object_id();
                 let new_page = page_obj.clone();
                 output_doc.objects.insert(new_id, new_page);
                 page_refs.push(lopdf::Object::Reference(new_id));
             }
-        }
     }
 
     // Create Pages dictionary

@@ -22,7 +22,7 @@ pub fn run(
         )))?;
 
     let page_count = source_doc.get_pages().len();
-    progress(Progress::new(20.0, &format!("Organizing {} pages", page_count), "organize"));
+    progress(Progress::new(20.0, format!("Organizing {} pages", page_count), "organize"));
 
     // Build the page order
     let order: Vec<u32> = if let Some(ref page_order) = opts.page_order {
@@ -43,25 +43,23 @@ pub fn run(
     let mut page_refs: Vec<lopdf::Object> = Vec::new();
 
     for &page_num in &order {
-        if let Some(&page_obj_id) = source_pages.get(&page_num) {
-            if let Ok(page_obj) = source_doc.get_object(page_obj_id) {
+        if let Some(&page_obj_id) = source_pages.get(&page_num)
+            && let Ok(page_obj) = source_doc.get_object(page_obj_id) {
                 let new_id = output_doc.new_object_id();
                 let mut new_page = page_obj.clone();
 
                 // Apply rotation if specified
-                if let Some(ref rotations) = opts.page_rotations {
-                    if let Some(&rotation) = rotations.get(&page_num) {
+                if let Some(ref rotations) = opts.page_rotations
+                    && let Some(&rotation) = rotations.get(&page_num) {
                         // Set the Rotate entry in the page dictionary
                         if let Ok(dict) = new_page.as_dict_mut() {
                             dict.set(b"Rotate", lopdf::Object::Integer(rotation as i64));
                         }
                     }
-                }
 
                 output_doc.objects.insert(new_id, new_page);
                 page_refs.push(lopdf::Object::Reference(new_id));
             }
-        }
     }
 
     // Create Pages dictionary

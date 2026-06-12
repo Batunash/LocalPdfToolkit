@@ -49,7 +49,7 @@ pub fn run(
     for (doc_idx, (input_path, _page_count)) in doc_info.iter().enumerate() {
         progress(Progress::new(
             30.0 + (doc_idx as f32 / total_files as f32) * 50.0,
-            &format!("Merging {} of {}: {} pages", doc_idx + 1, total_files, _page_count),
+            format!("Merging {} of {}: {} pages", doc_idx + 1, total_files, _page_count),
             "merge",
         ));
 
@@ -96,11 +96,10 @@ pub fn run(
 
     // Update page parent references
     for (page_id, _page_obj) in &mut all_page_objects {
-        if let Ok(obj) = merged_doc.get_object_mut(*page_id) {
-            if let Ok(dict) = obj.as_dict_mut() {
+        if let Ok(obj) = merged_doc.get_object_mut(*page_id)
+            && let Ok(dict) = obj.as_dict_mut() {
                 dict.set(b"Parent", lopdf::Object::Reference(pages_id));
             }
-        }
     }
 
     // Create Catalog

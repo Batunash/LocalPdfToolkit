@@ -14,7 +14,7 @@ pub fn run(opts: &CropOpts, progress: &dyn Fn(Progress)) -> Result<JobOutput, Lp
         .map_err(|e| LpError::PdfCorrupt(format!("Failed: {}", e)))?;
 
     let page_count = source_doc.get_pages().len();
-    progress(Progress::new(20.0, &format!("Cropping {} pages", page_count), "crop"));
+    progress(Progress::new(20.0, format!("Cropping {} pages", page_count), "crop"));
 
     // Create output document
     let mut output_doc = Document::with_version("1.7");
@@ -122,6 +122,7 @@ pub fn run(opts: &CropOpts, progress: &dyn Fn(Progress)) -> Result<JobOutput, Lp
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::{CropMargins, CropUnit};
     use std::path::PathBuf;
 
     #[test]

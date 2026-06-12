@@ -241,11 +241,10 @@ fn parse_page_ranges(s: &str) -> Option<Vec<PageRange>> {
         let part = part.trim();
         if part.contains('-') {
             let bounds: Vec<&str> = part.split('-').collect();
-            if bounds.len() == 2 {
-                if let (Ok(start), Ok(end)) = (bounds[0].trim().parse(), bounds[1].trim().parse()) {
+            if bounds.len() == 2
+                && let (Ok(start), Ok(end)) = (bounds[0].trim().parse(), bounds[1].trim().parse()) {
                     ranges.push(PageRange { start, end });
                 }
-            }
         } else if let Ok(n) = part.parse() {
             ranges.push(PageRange { start: n, end: n });
         }
@@ -260,11 +259,10 @@ fn parse_page_numbers(s: &str) -> Vec<u32> {
         let part = part.trim();
         if part.contains('-') {
             let bounds: Vec<&str> = part.split('-').collect();
-            if bounds.len() == 2 {
-                if let (Ok(start), Ok(end)) = (bounds[0].trim().parse::<u32>(), bounds[1].trim().parse::<u32>()) {
+            if bounds.len() == 2
+                && let (Ok(start), Ok(end)) = (bounds[0].trim().parse::<u32>(), bounds[1].trim().parse::<u32>()) {
                     pages.extend(start..=end);
                 }
-            }
         } else if let Ok(n) = part.parse() {
             pages.push(n);
         }
