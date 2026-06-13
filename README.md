@@ -17,7 +17,7 @@ Built with Rust and Tauri, LocalPDF is designed to be lightweight, fast, and sec
 
 ## Download
 
-Pre-compiled binaries for Windows, macOS, and Linux are available on the [Releases](https://github.com/okullubatuhan/localpdf/releases) page.
+Pre-compiled binaries for Windows, macOS, and Linux are available on the [Releases](https://github.com/Batunash/LocalPdfToolkit/releases) page.
 
 ## Command Line Interface
 
@@ -48,8 +48,8 @@ LocalPDF is built with a Rust core and a React/Tauri frontend.
 ### Setup
 
 ```bash
-git clone https://github.com/okullubatuhan/localpdf.git
-cd localpdf
+git clone https://github.com/Batunash/LocalPdfToolkit.git
+cd LocalPdfToolkit
 
 # Install frontend dependencies
 cd ui
