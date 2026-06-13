@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Save, Monitor, FolderOpen, FileText, Globe, RefreshCw } from 'lucide-react';
 import { useTranslation } from '../i18n';
+import { open as openDialog } from '@tauri-apps/plugin-dialog';
 
 export interface AppSettings {
   defaultOutputDir: string;
@@ -9,7 +10,7 @@ export interface AppSettings {
   ocrLanguage: 'eng' | 'tur' | 'eng+tur';
   autoUpdate: boolean;
   theme: 'light' | 'dark' | 'system';
-  language: 'en' | 'tr';
+  language: 'en' | 'tr' | 'es' | 'de' | 'fr';
 }
 
 const defaultSettings: AppSettings = {
@@ -67,6 +68,22 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({ open, onClose })
     setIsDirty(false);
   };
 
+  const handleSelectDirectory = async () => {
+    try {
+      const selected = await openDialog({
+        directory: true,
+        multiple: false,
+        title: 'Select Output Directory',
+      });
+      
+      if (selected && typeof selected === 'string') {
+        updateSetting('defaultOutputDir', selected);
+      }
+    } catch (error) {
+      console.error('Failed to select directory:', error);
+    }
+  };
+
   return (
     <AnimatePresence>
       {open && (
@@ -106,22 +123,22 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({ open, onClose })
               {/* Appearance */}
               <section>
                 <h3 className="text-sm font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-3">
-                  Appearance
+                  {t('settings.appearance')}
                 </h3>
                 <div className="space-y-4">
                   <div>
                     <label className="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300 mb-2">
                       <Monitor className="w-4 h-4" />
-                      Theme
+                      {t('settings.theme')}
                     </label>
                     <select
                       value={settings.theme}
                       onChange={(e) => updateSetting('theme', e.target.value as AppSettings['theme'])}
                       className="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-500"
                     >
-                      <option value="system">System</option>
-                      <option value="light">Light</option>
-                      <option value="dark">Dark</option>
+                      <option value="system">{t('settings.themeSystem')}</option>
+                      <option value="light">{t('settings.themeLight')}</option>
+                      <option value="dark">{t('settings.themeDark')}</option>
                     </select>
                   </div>
                 </div>
@@ -130,13 +147,13 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({ open, onClose })
               {/* Language */}
               <section>
                 <h3 className="text-sm font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-3">
-                  Language & Region
+                  {t('settings.languageRegion')}
                 </h3>
                 <div className="space-y-4">
                   <div>
                     <label className="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300 mb-2">
                       <Globe className="w-4 h-4" />
-                      Interface Language
+                      {t('settings.interfaceLang')}
                     </label>
                     <select
                       value={settings.language}
@@ -145,21 +162,24 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({ open, onClose })
                     >
                       <option value="en">English</option>
                       <option value="tr">Türkçe</option>
+                      <option value="es">Español</option>
+                      <option value="de">Deutsch</option>
+                      <option value="fr">Français</option>
                     </select>
                   </div>
                   <div>
                     <label className="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300 mb-2">
                       <FileText className="w-4 h-4" />
-                      OCR Language
+                      {t('settings.ocrLang')}
                     </label>
                     <select
                       value={settings.ocrLanguage}
                       onChange={(e) => updateSetting('ocrLanguage', e.target.value as AppSettings['ocrLanguage'])}
                       className="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-500"
                     >
-                      <option value="eng">English</option>
-                      <option value="tur">Turkish</option>
-                      <option value="eng+tur">English + Turkish</option>
+                      <option value="eng">{t('options.langEng')}</option>
+                      <option value="tur">{t('options.langTur')}</option>
+                      <option value="eng+tur">{t('options.langEngTur')}</option>
                     </select>
                   </div>
                 </div>
@@ -168,36 +188,44 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({ open, onClose })
               {/* Processing */}
               <section>
                 <h3 className="text-sm font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-3">
-                  Processing
+                  {t('settings.processing')}
                 </h3>
                 <div className="space-y-4">
                   <div>
                     <label className="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300 mb-2">
                       <FolderOpen className="w-4 h-4" />
-                      Default Output Directory
+                      {t('settings.defaultOutputDir')}
                     </label>
-                    <input
-                      type="text"
-                      value={settings.defaultOutputDir}
-                      onChange={(e) => updateSetting('defaultOutputDir', e.target.value)}
-                      placeholder="Leave empty for same as input"
-                      className="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-500 placeholder:text-zinc-400"
-                    />
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={settings.defaultOutputDir}
+                        onChange={(e) => updateSetting('defaultOutputDir', e.target.value)}
+                        placeholder={t('settings.defaultOutputDirPlaceholder')}
+                        className="flex-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-500 placeholder:text-zinc-400"
+                      />
+                      <button
+                        onClick={handleSelectDirectory}
+                        className="px-4 py-2 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors whitespace-nowrap"
+                      >
+                        {t('settings.browse')}
+                      </button>
+                    </div>
                   </div>
                   <div>
                     <label className="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300 mb-2">
                       <Save className="w-4 h-4" />
-                      Default Compression Level
+                      {t('settings.defaultCompression')}
                     </label>
                     <select
                       value={settings.compressionLevel}
                       onChange={(e) => updateSetting('compressionLevel', e.target.value as AppSettings['compressionLevel'])}
                       className="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-500"
                     >
-                      <option value="extreme">Extreme (Lowest Quality)</option>
-                      <option value="high">High Compression</option>
-                      <option value="balanced">Balanced (Recommended)</option>
-                      <option value="low">Low (Highest Quality)</option>
+                      <option value="extreme">{t('options.compressExtreme')} ({t('options.compressExtremeDesc')})</option>
+                      <option value="high">{t('options.compressHigh')}</option>
+                      <option value="balanced">{t('options.compressBalanced')}</option>
+                      <option value="low">{t('options.compressLow')} ({t('options.compressLowDesc')})</option>
                     </select>
                   </div>
                 </div>
@@ -206,13 +234,13 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({ open, onClose })
               {/* Updates */}
               <section>
                 <h3 className="text-sm font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-3">
-                  Updates
+                  {t('settings.updates')}
                 </h3>
                 <div className="space-y-4">
                   <label className="flex items-center justify-between cursor-pointer">
                     <div className="flex items-center gap-2">
                       <RefreshCw className="w-4 h-4 text-zinc-400" />
-                      <span className="text-sm text-zinc-700 dark:text-zinc-300">Auto-check for updates</span>
+                      <span className="text-sm text-zinc-700 dark:text-zinc-300">{t('settings.autoCheckUpdates')}</span>
                     </div>
                     <button
                       onClick={() => updateSetting('autoUpdate', !settings.autoUpdate)}
@@ -238,21 +266,21 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({ open, onClose })
                 disabled={!isDirty}
                 className="px-4 py-2 text-sm text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                Reset to Defaults
+                {t('settings.resetDefaults')}
               </button>
               <div className="flex items-center gap-2">
                 <button
                   onClick={onClose}
                   className="px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
                 >
-                  Cancel
+                  {t('settings.cancel')}
                 </button>
                 <button
                   onClick={handleSave}
                   disabled={!isDirty}
                   className="px-4 py-2 text-sm bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors"
                 >
-                  Save Changes
+                  {t('settings.saveChanges')}
                 </button>
               </div>
             </div>
