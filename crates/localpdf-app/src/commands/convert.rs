@@ -129,8 +129,7 @@ pub async fn pdf_thumbnail_impl(
 mod tests {
     use super::*;
 
-    #[path = "../../../../../localpdf-core/tests/common/mod.rs"]
-    mod common;
+    use crate::commands::common_test as common;
 
     #[tokio::test]
     async fn test_convert_any_impl() {

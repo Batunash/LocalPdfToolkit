@@ -344,8 +344,7 @@ pub fn parse_page_numbers(s: &str) -> Vec<u32> {
 mod tests {
     use super::*;
 
-    #[path = "../../../../../localpdf-core/tests/common/mod.rs"]
-    mod common;
+    use crate::commands::common_test as common;
 
     #[tokio::test]
     async fn test_pdf_merge_impl() {
