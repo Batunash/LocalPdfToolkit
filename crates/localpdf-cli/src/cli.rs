@@ -1048,8 +1048,7 @@ mod tests {
     use super::*;
     use std::path::PathBuf;
 
-    #[path = "../../../../localpdf-core/tests/common/mod.rs"]
-    mod common;
+    use crate::common_test as common;
 
     #[test]
     fn test_run_merge() {
