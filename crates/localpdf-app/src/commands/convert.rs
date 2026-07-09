@@ -6,9 +6,22 @@ use std::path::PathBuf;
 use tauri::State;
 use crate::state::AppState;
 
+#[cfg(not(tarpaulin_include))]
 #[tauri::command]
 pub async fn convert_any(
     app_state: State<'_, AppState>,
+    input_file: String,
+    output_path: String,
+    target_format: String,
+    dpi: Option<u32>,
+    quality: Option<u32>,
+    overwrite: bool,
+) -> Result<String, String> {
+    convert_any_impl(&app_state, input_file, output_path, target_format, dpi, quality, overwrite).await
+}
+
+pub async fn convert_any_impl(
+    app_state: &AppState,
     input_file: String,
     output_path: String,
     target_format: String,
@@ -59,8 +72,13 @@ pub async fn convert_any(
     }
 }
 
+#[cfg(not(tarpaulin_include))]
 #[tauri::command]
 pub async fn pdf_info(input_file: String) -> Result<serde_json::Value, String> {
+    pdf_info_impl(input_file).await
+}
+
+pub async fn pdf_info_impl(input_file: String) -> Result<serde_json::Value, String> {
     let result: std::result::Result<std::result::Result<PdfInfo, localpdf_core::LpError>, tokio::task::JoinError> = tokio::task::spawn_blocking(move || {
         localpdf_core::utils::get_pdf_info(&PathBuf::from(input_file))
     }).await;
@@ -74,9 +92,20 @@ pub async fn pdf_info(input_file: String) -> Result<serde_json::Value, String> {
     }
 }
 
+#[cfg(not(tarpaulin_include))]
 #[tauri::command]
 pub async fn pdf_thumbnail(
     app_state: State<'_, AppState>,
+    input_file: String,
+    pages: Vec<u32>,
+    dpi: Option<u32>,
+    overwrite: bool,
+) -> Result<Vec<String>, String> {
+    pdf_thumbnail_impl(&app_state, input_file, pages, dpi, overwrite).await
+}
+
+pub async fn pdf_thumbnail_impl(
+    app_state: &AppState,
     input_file: String,
     pages: Vec<u32>,
     dpi: Option<u32>,
@@ -96,3 +125,51 @@ pub async fn pdf_thumbnail(
     Ok(vec![])
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[path = "../../../../../localpdf-core/tests/common/mod.rs"]
+    mod common;
+
+    #[tokio::test]
+    async fn test_convert_any_impl() {
+        let state = AppState::default();
+        let pdf = common::get_dummy_pdf();
+        let out = PathBuf::from("tests/fixtures/convert_test_out.docx");
+        
+        let result = convert_any_impl(
+            &state,
+            pdf.to_string_lossy().to_string(),
+            out.to_string_lossy().to_string(),
+            "docx".to_string(),
+            Some(150),
+            None,
+            true,
+        ).await;
+        
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_pdf_info_impl() {
+        let pdf = common::get_dummy_pdf();
+        let result = pdf_info_impl(pdf.to_string_lossy().to_string()).await;
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_pdf_thumbnail_impl() {
+        let state = AppState::default();
+        let pdf = common::get_dummy_pdf();
+        let result = pdf_thumbnail_impl(
+            &state,
+            pdf.to_string_lossy().to_string(),
+            vec![1],
+            Some(150),
+            true,
+        ).await;
+        
+        assert!(result.is_ok());
+    }
+}

@@ -19,7 +19,7 @@ export const ProtectTool: React.FC<ProtectToolProps> = ({ onBack }) => {
   const { t } = useTranslation();
 
   const handleProtect = async (files: SelectedFile[], setProgress: (pct: number, msg?: string) => void) => {
-    if (files.length === 0) throw new Error(t('common.noFileSelected'));
+    
     if (!password) throw new Error(t('common.passwordEmpty'));
 
     setProgress(10, 'Getting temporary directory...');

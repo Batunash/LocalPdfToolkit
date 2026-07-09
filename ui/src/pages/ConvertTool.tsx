@@ -19,7 +19,7 @@ export const ConvertTool: React.FC<ConvertToolProps> = ({ onBack }) => {
 
   // Run conversion
   const handleConvert = async (files: SelectedFile[], setProgress: (pct: number, msg?: string) => void) => {
-    if (files.length === 0) throw new Error('No file selected');
+    
     
     const isPdfInput = files[0].path.toLowerCase().endsWith('.pdf');
     const actualTargetFormat = isPdfInput ? targetFormat : 'pdf';

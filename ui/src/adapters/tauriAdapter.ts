@@ -424,34 +424,34 @@ export const tauriAdapter = {
           author: info.author || undefined,
           creator: info.creator || undefined,
           producer: info.producer || undefined,
-          pages: info.page_count || info.pages || 0,
-          isEncrypted: info.is_encrypted || false,
-          sizeBytes: info.size_bytes || 0
+          pages: info.page_count,
+          isEncrypted: info.is_encrypted,
+          sizeBytes: info.size_bytes
         };
       }
     }
     await delay(400);
-    const filename = inputFile.split(/[\\/]/).pop() || 'document.pdf';
+    const fileName = inputFile.split(/[\/\\]/).pop() || 'Unknown';
     return {
-      title: filename.replace('.pdf', ''),
-      author: 'Antigravity AI',
-      creator: 'LocalPdfToolkit',
-      producer: 'Google DeepMind',
+      title: fileName,
       pages: 12,
       isEncrypted: false,
-      sizeBytes: 1024 * 1024 * 3.4
+      sizeBytes: 1048576,
     };
   },
 
-  getThumbnails: async (inputFile: string, pages: number[], dpi?: number, overwrite: boolean = true): Promise<string[]> => {
+  getThumbnails: async (inputFile: string, pages: number[], dpi: number = 72, overwrite: boolean = true): Promise<string[]> => {
     if (checkIsTauri()) {
       const invokeFn = await getInvoke();
       if (invokeFn) return await invokeFn('pdf_thumbnail', { inputFile, pages, dpi, overwrite });
     }
     await delay(300);
-    return pages.map(page => {
-      const hue = (page * 45) % 360;
-      return `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="280" viewBox="0 0 200 280"><rect width="200" height="280" fill="hsl(${hue}, 40%, 20%)"/><text x="100" y="140" fill="white" font-size="24" font-family="sans-serif" text-anchor="middle" dominant-baseline="middle">Page ${page}</text></svg>`;
-    });
+    return pages.map(p => `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="280"><rect width="200" height="280" fill="%23ddd"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="20">Page ${p}</text></svg>`);
+  },
+
+  _resetCache: () => {
+    cachedInvoke = null;
+    cachedOpen = null;
+    cachedSave = null;
   }
 };

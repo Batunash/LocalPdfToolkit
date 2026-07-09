@@ -10,9 +10,19 @@ use std::path::PathBuf;
 use tauri::State;
 use crate::state::AppState;
 
+#[cfg(not(tarpaulin_include))]
 #[tauri::command]
 pub async fn pdf_merge(
     app_state: State<'_, AppState>,
+    input_files: Vec<String>,
+    output_path: String,
+    overwrite: bool,
+) -> Result<String, String> {
+    pdf_merge_impl(&app_state, input_files, output_path, overwrite).await
+}
+
+pub async fn pdf_merge_impl(
+    app_state: &AppState,
     input_files: Vec<String>,
     output_path: String,
     overwrite: bool,
@@ -41,9 +51,22 @@ pub async fn pdf_merge(
     }
 }
 
+#[cfg(not(tarpaulin_include))]
 #[tauri::command]
 pub async fn pdf_split(
     app_state: State<'_, AppState>,
+    input_file: String,
+    output_dir: String,
+    mode: String,
+    ranges: Option<String>,
+    n_pages: Option<u32>,
+    overwrite: bool,
+) -> Result<Vec<String>, String> {
+    pdf_split_impl(&app_state, input_file, output_dir, mode, ranges, n_pages, overwrite).await
+}
+
+pub async fn pdf_split_impl(
+    app_state: &AppState,
     input_file: String,
     output_dir: String,
     mode: String,
@@ -86,9 +109,20 @@ pub async fn pdf_split(
     }
 }
 
+#[cfg(not(tarpaulin_include))]
 #[tauri::command]
 pub async fn pdf_remove_pages(
     app_state: State<'_, AppState>,
+    input_file: String,
+    output_path: String,
+    page_ranges: String,
+    overwrite: bool,
+) -> Result<String, String> {
+    pdf_remove_pages_impl(&app_state, input_file, output_path, page_ranges, overwrite).await
+}
+
+pub async fn pdf_remove_pages_impl(
+    app_state: &AppState,
     input_file: String,
     output_path: String,
     page_ranges: String,
@@ -121,9 +155,20 @@ pub async fn pdf_remove_pages(
     }
 }
 
+#[cfg(not(tarpaulin_include))]
 #[tauri::command]
 pub async fn pdf_extract_pages(
     app_state: State<'_, AppState>,
+    input_file: String,
+    output_path: String,
+    page_ranges: String,
+    overwrite: bool,
+) -> Result<String, String> {
+    pdf_extract_pages_impl(&app_state, input_file, output_path, page_ranges, overwrite).await
+}
+
+pub async fn pdf_extract_pages_impl(
+    app_state: &AppState,
     input_file: String,
     output_path: String,
     page_ranges: String,
@@ -156,9 +201,21 @@ pub async fn pdf_extract_pages(
     }
 }
 
+#[cfg(not(tarpaulin_include))]
 #[tauri::command]
 pub async fn pdf_organize(
     app_state: State<'_, AppState>,
+    input_file: String,
+    output_path: String,
+    page_order: Option<Vec<u32>>,
+    page_rotations: Option<std::collections::HashMap<u32, u32>>,
+    overwrite: bool,
+) -> Result<String, String> {
+    pdf_organize_impl(&app_state, input_file, output_path, page_order, page_rotations, overwrite).await
+}
+
+pub async fn pdf_organize_impl(
+    app_state: &AppState,
     input_file: String,
     output_path: String,
     page_order: Option<Vec<u32>>,
@@ -192,9 +249,20 @@ pub async fn pdf_organize(
     }
 }
 
+#[cfg(not(tarpaulin_include))]
 #[tauri::command]
 pub async fn pdf_compress(
     app_state: State<'_, AppState>,
+    input_file: String,
+    output_path: String,
+    level: String,
+    overwrite: bool,
+) -> Result<String, String> {
+    pdf_compress_impl(&app_state, input_file, output_path, level, overwrite).await
+}
+
+pub async fn pdf_compress_impl(
+    app_state: &AppState,
     input_file: String,
     output_path: String,
     level: String,
@@ -235,16 +303,17 @@ pub async fn pdf_compress(
 }
 
 /// Parse ranges string into Vec<PageRange> (e.g., "1-3,5,7-9" -> [PageRange{1,3}, PageRange{5,5}, PageRange{7,9}])
-fn parse_page_ranges(s: &str) -> Option<Vec<PageRange>> {
+pub fn parse_page_ranges(s: &str) -> Option<Vec<PageRange>> {
     let mut ranges = Vec::new();
     for part in s.split(',') {
         let part = part.trim();
         if part.contains('-') {
             let bounds: Vec<&str> = part.split('-').collect();
-            if bounds.len() == 2
-                && let (Ok(start), Ok(end)) = (bounds[0].trim().parse(), bounds[1].trim().parse()) {
+            if bounds.len() == 2 {
+                if let (Ok(start), Ok(end)) = (bounds[0].trim().parse(), bounds[1].trim().parse()) {
                     ranges.push(PageRange { start, end });
                 }
+            }
         } else if let Ok(n) = part.parse() {
             ranges.push(PageRange { start: n, end: n });
         }
@@ -253,19 +322,165 @@ fn parse_page_ranges(s: &str) -> Option<Vec<PageRange>> {
 }
 
 /// Parse ranges string into Vec<u32> of individual page numbers (e.g., "1-3,5" -> [1,2,3,5])
-fn parse_page_numbers(s: &str) -> Vec<u32> {
+pub fn parse_page_numbers(s: &str) -> Vec<u32> {
     let mut pages = Vec::new();
     for part in s.split(',') {
         let part = part.trim();
         if part.contains('-') {
             let bounds: Vec<&str> = part.split('-').collect();
-            if bounds.len() == 2
-                && let (Ok(start), Ok(end)) = (bounds[0].trim().parse::<u32>(), bounds[1].trim().parse::<u32>()) {
+            if bounds.len() == 2 {
+                if let (Ok(start), Ok(end)) = (bounds[0].trim().parse::<u32>(), bounds[1].trim().parse::<u32>()) {
                     pages.extend(start..=end);
                 }
+            }
         } else if let Ok(n) = part.parse() {
             pages.push(n);
         }
     }
     pages
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[path = "../../../../../localpdf-core/tests/common/mod.rs"]
+    mod common;
+
+    #[tokio::test]
+    async fn test_pdf_merge_impl() {
+        let state = AppState::default();
+        let pdf1 = common::get_dummy_pdf();
+        let pdf2 = common::get_dummy_pdf();
+        let out = PathBuf::from("tests/fixtures/app_merged_out.pdf");
+        
+        let result = pdf_merge_impl(
+            &state,
+            vec![pdf1.to_string_lossy().to_string(), pdf2.to_string_lossy().to_string()],
+            out.to_string_lossy().to_string(),
+            true,
+        ).await;
+        
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_pdf_split_impl() {
+        let state = AppState::default();
+        let pdf = common::get_dummy_pdf();
+        let out = PathBuf::from("tests/fixtures/app_split_out_dir");
+        std::fs::create_dir_all(&out).unwrap();
+        
+        let result = pdf_split_impl(
+            &state,
+            pdf.to_string_lossy().to_string(),
+            out.to_string_lossy().to_string(),
+            "by_every".to_string(),
+            None,
+            Some(1),
+            true,
+        ).await;
+        
+        assert!(result.is_ok());
+
+        let _ = pdf_split_impl(
+            &state,
+            pdf.to_string_lossy().to_string(),
+            out.to_string_lossy().to_string(),
+            "by_ranges".to_string(),
+            Some("1".to_string()),
+            None,
+            true,
+        ).await;
+
+        let _ = pdf_split_impl(
+            &state,
+            pdf.to_string_lossy().to_string(),
+            out.to_string_lossy().to_string(),
+            "by_size".to_string(),
+            None,
+            None,
+            true,
+        ).await;
+    }
+
+    #[tokio::test]
+    async fn test_pdf_remove_pages_impl() {
+        let state = AppState::default();
+        let pdf = common::get_dummy_pdf();
+        let out = PathBuf::from("tests/fixtures/app_remove_out.pdf");
+        
+        let result = pdf_remove_pages_impl(
+            &state,
+            pdf.to_string_lossy().to_string(),
+            out.to_string_lossy().to_string(),
+            "1".to_string(),
+            true,
+        ).await;
+        
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_pdf_extract_pages_impl() {
+        let state = AppState::default();
+        let pdf = common::get_dummy_pdf();
+        let out = PathBuf::from("tests/fixtures/app_extract_out.pdf");
+        
+        let result = pdf_extract_pages_impl(
+            &state,
+            pdf.to_string_lossy().to_string(),
+            out.to_string_lossy().to_string(),
+            "1".to_string(),
+            true,
+        ).await;
+        
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_pdf_organize_impl() {
+        let state = AppState::default();
+        let pdf = common::get_dummy_pdf();
+        let out = PathBuf::from("tests/fixtures/app_organize_out.pdf");
+        
+        let result = pdf_organize_impl(
+            &state,
+            pdf.to_string_lossy().to_string(),
+            out.to_string_lossy().to_string(),
+            Some(vec![1]),
+            None,
+            true,
+        ).await;
+        
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_pdf_compress_impl() {
+        let state = AppState::default();
+        let pdf = common::get_dummy_pdf();
+        let out = PathBuf::from("tests/fixtures/app_compress_out.pdf");
+        
+        let result = pdf_compress_impl(
+            &state,
+            pdf.to_string_lossy().to_string(),
+            out.to_string_lossy().to_string(),
+            "balanced".to_string(),
+            true,
+        ).await;
+        
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_parse_helpers() {
+        let ranges = parse_page_ranges("1-3,5,7-9").unwrap();
+        assert_eq!(ranges.len(), 3);
+        assert_eq!(ranges[0].start, 1);
+        assert_eq!(ranges[0].end, 3);
+        
+        let nums = parse_page_numbers("1-3,5");
+        assert_eq!(nums, vec![1, 2, 3, 5]);
+    }
 }

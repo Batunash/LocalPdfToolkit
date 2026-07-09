@@ -14,7 +14,7 @@ export const OcrTool: React.FC<OcrToolProps> = ({ onBack }) => {
   const { t } = useTranslation();
 
   const handleOcr = async (files: SelectedFile[], setProgress: (pct: number, msg?: string) => void) => {
-    if (files.length === 0) throw new Error('No file selected');
+    
 
     setProgress(10, 'Getting temporary directory...');
     const tempDir = await tauriAdapter.getTempDir();

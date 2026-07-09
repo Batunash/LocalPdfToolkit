@@ -46,6 +46,13 @@ jobs:
         run: npm install
         working-directory: ./ui
 
+      - name: Run UI tests
+        run: npm run test
+        working-directory: ./ui
+
+      - name: Run Rust tests
+        run: cargo test --workspace
+
       - name: Build Tauri app and upload to Github Release
         uses: tauri-apps/tauri-action@v0
         env:

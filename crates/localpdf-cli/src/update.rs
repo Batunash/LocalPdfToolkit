@@ -13,3 +13,4 @@ pub fn check_for_updates(quiet: bool) -> Result<(), Box<dyn std::error::Error>> 
     
     Ok(())
 }
+#[cfg(test)] mod tests { use super::*; #[test] fn test_check_for_updates() { assert!(check_for_updates(true).is_ok()); assert!(check_for_updates(false).is_ok()); } }

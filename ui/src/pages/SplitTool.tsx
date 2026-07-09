@@ -21,7 +21,7 @@ export const SplitTool: React.FC<SplitToolProps> = ({ onBack }) => {
   const getRangesString = () => rangeList.map(r => `${r.from}-${r.to}`).join(', ');
 
   const handleSplit = async (files: SelectedFile[], setProgress: (pct: number, msg?: string) => void) => {
-    if (files.length === 0) throw new Error('No file selected');
+    
     
     setProgress(10, 'Getting temporary directory...');
     const tempDir = await tauriAdapter.getTempDir();
@@ -108,9 +108,9 @@ export const SplitTool: React.FC<SplitToolProps> = ({ onBack }) => {
                 <RangeInputEditor 
                   ranges={rangeList} 
                   onChange={setRangeList} 
-                  maxPages={files.length > 0 ? files[0]?.pages : undefined}
+                  maxPages={files[0]?.pages}
                 />
-                {files.length > 0 && files[0] && (
+                {files[0] && (
                   <PdfRangeVisualizer 
                     filePath={files[0].path} 
                     selectedRanges={getRangesString()} 

@@ -56,7 +56,13 @@ export const PdfRangeVisualizer: React.FC<PdfRangeVisualizerProps> = ({ filePath
       try {
         const data = await tauriAdapter.readFile(filePath);
         if (data.length === 0) {
-          throw new Error('Could not read file or running in mock mode');
+          if (!tauriAdapter.isTauri()) {
+            if (active) {
+              setNumPages(10); // Mock pages
+            }
+            return;
+          }
+          throw new Error('Could not read file');
         }
 
         const loadingTask = pdfjsLib.getDocument({ data });
@@ -95,28 +101,33 @@ export const PdfRangeVisualizer: React.FC<PdfRangeVisualizerProps> = ({ filePath
           <span className="ml-3 text-xs font-semibold text-zinc-500">Parsing Document...</span>
         </div>
       ) : (
-        <div className="flex overflow-x-auto pb-4 gap-4 w-full snap-x">
+        <div className="flex flex-wrap pb-4 gap-4 w-full">
           {rangeBlocks.map((block, idx) => {
             // Validate bounds
-            const validStart = Math.max(1, Math.min(block.start, numPages));
-            const validEnd = Math.max(1, Math.min(block.end, numPages));
+            const validStart = Math.max(1, Math.min(block.start, numPages || block.start));
+            const validEnd = Math.max(1, Math.min(block.end, numPages || block.end));
             
             return (
               <div 
                 key={idx} 
-                className="flex-none snap-start min-w-[200px] flex flex-col p-4 bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-sm items-center justify-center"
+                className="flex flex-col p-4 bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-sm items-center justify-center"
               >
                 <div className="text-xs font-bold text-zinc-500 dark:text-zinc-400 mb-4">{block.label}</div>
                 
                 <div className="flex items-center gap-4">
                   {/* Start Thumbnail */}
-                  {pdfDoc && (
-                    <div className="w-24 shrink-0">
+                  {pdfDoc ? (
+                    <div className="w-36 shrink-0 aspect-[1/1.414]">
                       <PdfThumbnail 
                         pdf={pdfDoc} 
                         pageNum={validStart} 
                         hideLabel={false}
+                        className="w-full h-full rounded-md"
                       />
+                    </div>
+                  ) : (
+                    <div className="w-36 shrink-0 aspect-[1/1.414] bg-zinc-200 dark:bg-zinc-800 rounded-md border border-zinc-300 dark:border-zinc-700 flex items-center justify-center shadow-sm">
+                      <span className="text-zinc-400 dark:text-zinc-500 font-bold text-lg">{validStart}</span>
                     </div>
                   )}
 
@@ -127,13 +138,18 @@ export const PdfRangeVisualizer: React.FC<PdfRangeVisualizerProps> = ({ filePath
                       </div>
                       
                       {/* End Thumbnail */}
-                      {pdfDoc && (
-                        <div className="w-24 shrink-0">
+                      {pdfDoc ? (
+                        <div className="w-36 shrink-0 aspect-[1/1.414]">
                           <PdfThumbnail 
                             pdf={pdfDoc} 
                             pageNum={validEnd} 
                             hideLabel={false}
+                            className="w-full h-full rounded-md"
                           />
+                        </div>
+                      ) : (
+                        <div className="w-36 shrink-0 aspect-[1/1.414] bg-zinc-200 dark:bg-zinc-800 rounded-md border border-zinc-300 dark:border-zinc-700 flex items-center justify-center shadow-sm">
+                          <span className="text-zinc-400 dark:text-zinc-500 font-bold text-lg">{validEnd}</span>
                         </div>
                       )}
                     </>

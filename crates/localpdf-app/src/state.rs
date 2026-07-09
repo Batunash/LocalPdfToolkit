@@ -88,3 +88,63 @@ impl AppState {
         jobs.remove(id);
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_app_state_default() {
+        let state = AppState::default();
+        assert!(state.active_jobs.read().unwrap().is_empty());
+        assert!(state.temp_dir.read().unwrap().is_none());
+        assert_eq!(*state.ocr_lang.read().unwrap(), "eng");
+    }
+
+    #[test]
+    fn test_create_temp_dir() {
+        let state = AppState::default();
+        let path1 = state.create_temp_dir().unwrap();
+        let path2 = state.create_temp_dir().unwrap();
+        assert_eq!(path1, path2);
+        assert!(path1.exists());
+    }
+
+    #[test]
+    fn test_jobs() {
+        let state = AppState::default();
+        state.add_job("job1".to_string());
+        
+        {
+            let jobs = state.active_jobs.read().unwrap();
+            assert!(jobs.contains_key("job1"));
+            let job = jobs.get("job1").unwrap();
+            assert_eq!(*job.status.read().unwrap(), "pending");
+            assert_eq!(*job.progress.read().unwrap(), 0.0);
+        }
+        
+        state.update_job_progress("job1", 50.0, "processing");
+        {
+            let jobs = state.active_jobs.read().unwrap();
+            let job = jobs.get("job1").unwrap();
+            assert_eq!(*job.status.read().unwrap(), "processing");
+            assert_eq!(*job.progress.read().unwrap(), 50.0);
+        }
+        
+        state.update_job_progress("nonexistent", 50.0, "processing");
+        
+        state.complete_job("job1");
+        {
+            let jobs = state.active_jobs.read().unwrap();
+            let job = jobs.get("job1").unwrap();
+            assert_eq!(*job.status.read().unwrap(), "complete");
+            assert_eq!(*job.progress.read().unwrap(), 100.0);
+        }
+        
+        state.remove_job("job1");
+        {
+            let jobs = state.active_jobs.read().unwrap();
+            assert!(!jobs.contains_key("job1"));
+        }
+    }
+}

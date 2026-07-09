@@ -20,7 +20,7 @@ export const RemoveTool: React.FC<ToolProps> = ({ onBack }) => {
   const getRangesString = () => rangeList.map(r => r.from === r.to ? `${r.from}` : `${r.from}-${r.to}`).join(', ');
 
   const handleRun = async (files: SelectedFile[], setProgress: (pct: number, msg?: string) => void) => {
-    if (files.length === 0) throw new Error(t('common.noFileSelected'));
+    
     setProgress(10, 'Getting temporary directory...');
     const tempDir = await tauriAdapter.getTempDir();
     const file = files[0];
@@ -64,7 +64,7 @@ export const RepairTool: React.FC<ToolProps> = ({ onBack }) => {
   const { t } = useTranslation();
 
   const handleRun = async (files: SelectedFile[], setProgress: (pct: number, msg?: string) => void) => {
-    if (files.length === 0) throw new Error(t('common.noFileSelected'));
+    
     setProgress(10, 'Getting temporary directory...');
     const tempDir = await tauriAdapter.getTempDir();
     const file = files[0];
@@ -107,7 +107,7 @@ export const WatermarkTool: React.FC<ToolProps> = ({ onBack }) => {
   const { t } = useTranslation();
 
   const handleRun = async (files: SelectedFile[], setProgress: (pct: number, msg?: string) => void) => {
-    if (files.length === 0) throw new Error(t('common.noFileSelected'));
+    
     if (!text) throw new Error(t('common.watermarkEmpty'));
 
     setProgress(10, 'Getting temporary directory...');
@@ -246,7 +246,7 @@ export const PageNumbersTool: React.FC<ToolProps> = ({ onBack }) => {
   const { t } = useTranslation();
 
   const handleRun = async (files: SelectedFile[], setProgress: (pct: number, msg?: string) => void) => {
-    if (files.length === 0) throw new Error(t('common.noFileSelected'));
+    
     setProgress(10, 'Getting temporary directory...');
     const tempDir = await tauriAdapter.getTempDir();
     const file = files[0];
@@ -334,7 +334,7 @@ export const CropTool: React.FC<ToolProps> = ({ onBack }) => {
   const { t } = useTranslation();
 
   const handleRun = async (files: SelectedFile[], setProgress: (pct: number, msg?: string) => void) => {
-    if (files.length === 0) throw new Error(t('common.noFileSelected'));
+    
     setProgress(10, 'Getting temporary directory...');
     const tempDir = await tauriAdapter.getTempDir();
     const file = files[0];

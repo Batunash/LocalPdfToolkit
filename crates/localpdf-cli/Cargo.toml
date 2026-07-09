@@ -28,3 +28,6 @@ serde_json.workspace = true
 
 # Async
 tokio.workspace = true
+
+[dev-dependencies]
+lopdf.workspace = true

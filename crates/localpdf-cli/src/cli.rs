@@ -1042,3 +1042,262 @@ fn handle_result<T: std::fmt::Debug>(
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::path::PathBuf;
+
+    #[path = "../../../../localpdf-core/tests/common/mod.rs"]
+    mod common;
+
+    #[test]
+    fn test_run_merge() {
+        let pdf1 = common::get_dummy_pdf();
+        let pdf2 = common::get_dummy_pdf();
+        let out = PathBuf::from("tests_out/cli_merged_out.pdf");
+        
+        let opts = MergeOptions {
+            input_files: vec![pdf1.clone(), pdf2.clone()],
+            output: Some(out.clone()),
+        };
+        
+        let result = run_merge(opts, true, false, false, true);
+        assert!(result.is_ok());
+        
+        let json_result = run_merge(MergeOptions {
+            input_files: vec![pdf1, pdf2],
+            output: Some(out),
+        }, false, true, true, true);
+        assert!(json_result.is_ok());
+    }
+
+    #[test]
+    fn test_run_split() {
+        let pdf = common::get_dummy_pdf();
+        let out = PathBuf::from("tests_out/cli_split_out_dir");
+        std::fs::create_dir_all(&out).unwrap();
+        
+        let opts = SplitOptions {
+            input_file: pdf.clone(),
+            output: Some(out.clone()),
+            ranges: None,
+            every: Some(1),
+            size: None,
+        };
+        
+        let result = run_split(opts, true, false, false, true);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_run_remove() {
+        let pdf = common::get_dummy_pdf();
+        let out = PathBuf::from("tests_out/cli_remove_out.pdf");
+        
+        let opts = RemoveOptions {
+            input_file: pdf,
+            output: Some(out),
+            pages: "1".to_string(),
+        };
+        
+        let result = run_remove(opts, true, false, false, true);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_run_extract() {
+        let pdf = common::get_dummy_pdf();
+        let out = PathBuf::from("tests_out/cli_extract_out.pdf");
+        
+        let opts = ExtractOptions {
+            input_file: pdf,
+            output: Some(out),
+            pages: "1".to_string(),
+        };
+        
+        let result = run_extract(opts, true, false, false, true);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_run_organize() {
+        let pdf = common::get_dummy_pdf();
+        let out = PathBuf::from("tests_out/cli_organize_out.pdf");
+        
+        let opts = OrganizeOptions {
+            input_file: pdf,
+            output: Some(out),
+            order: Some("1".to_string()),
+            rotate: None,
+        };
+        
+        let result = run_organize(opts, true, false, false, true);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_run_compress() {
+        let pdf = common::get_dummy_pdf();
+        let out = PathBuf::from("tests_out/cli_compress_out.pdf");
+        
+        let opts = CompressOptions {
+            input_file: pdf,
+            output: Some(out),
+            level: CompressionLevelArg::Balanced,
+        };
+        
+        let result = run_compress(opts, true, false, false, true);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_run_rotate() {
+        let pdf = common::get_dummy_pdf();
+        let out = PathBuf::from("tests_out/cli_rotate_out.pdf");
+        
+        let opts = RotateOptions {
+            input_file: pdf,
+            output: Some(out),
+            angle: 90,
+            pages: None,
+        };
+        
+        let result = run_rotate(opts, true, false, false, true);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_run_watermark() {
+        let pdf = common::get_dummy_pdf();
+        let out = PathBuf::from("tests_out/cli_watermark_out.pdf");
+        
+        let opts = WatermarkOptions {
+            input_file: pdf,
+            output: Some(out),
+            text: Some("Test".to_string()),
+            image: None,
+        };
+        
+        let result = run_watermark(opts, true, false, false, true);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_run_page_numbers() {
+        let pdf = common::get_dummy_pdf();
+        let out = PathBuf::from("tests_out/cli_numbers_out.pdf");
+        
+        let opts = PageNumberOptions {
+            input_file: pdf,
+            output: Some(out),
+            position: "bottom-center".to_string(),
+            format: "simple".to_string(),
+        };
+        
+        let result = run_page_numbers(opts, true, false, false, true);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_run_crop() {
+        let pdf = common::get_dummy_pdf();
+        let out = PathBuf::from("tests_out/cli_crop_out.pdf");
+        
+        let opts = CropOptions {
+            input_file: pdf,
+            output: Some(out),
+            top: Some(10.0),
+            bottom: Some(10.0),
+            left: Some(10.0),
+            right: Some(10.0),
+        };
+        
+        let result = run_crop(opts, true, false, false, true);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_run_ocr() {
+        let pdf = common::get_dummy_pdf();
+        let out = PathBuf::from("tests_out/cli_ocr_out.pdf");
+        
+        let opts = OcrOptions {
+            input_file: pdf,
+            output: Some(out),
+            lang: "eng".to_string(),
+            dpi: 300,
+        };
+        
+        let result = run_ocr(opts, true, false, false, true);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_run_protect_unlock() {
+        let pdf = common::get_dummy_pdf();
+        let out = PathBuf::from("tests_out/cli_protect_out.pdf");
+        
+        let opts = ProtectOptions {
+            input_file: pdf.clone(),
+            output: Some(out.clone()),
+            user_password: "pass".to_string(),
+            owner_password: None,
+        };
+        
+        let result = run_protect(opts, true, false, false, true);
+        assert!(result.is_ok());
+        
+        let out2 = PathBuf::from("tests_out/cli_unlock_out.pdf");
+        let opts2 = UnlockOptions {
+            input_file: out,
+            output: Some(out2),
+            password: "pass".to_string(),
+        };
+        
+        let result2 = run_unlock(opts2, true, false, false, true);
+        assert!(result2.is_ok());
+    }
+
+    #[test]
+    fn test_run_repair() {
+        let pdf = common::get_dummy_pdf();
+        let out = PathBuf::from("tests_out/cli_repair_out.pdf");
+        
+        let opts = RepairOptions {
+            input_file: pdf,
+            output: Some(out),
+        };
+        
+        let result = run_repair(opts, true, false, false, true);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_run_convert() {
+        let pdf = common::get_dummy_pdf();
+        let out = PathBuf::from("tests_out/cli_convert_out.docx");
+        
+        let opts = ConvertOptions {
+            input_file: pdf,
+            output: Some(out),
+            to: FormatArg::Docx,
+            dpi: 150,
+        };
+        
+        let result = run_convert(opts, true, false, false, true);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_run_info() {
+        let pdf = common::get_dummy_pdf();
+        
+        let opts = InfoOptions {
+            input_file: pdf,
+        };
+        
+        let result = run_info(opts, true, false, false);
+        assert!(result.is_ok());
+    }
+}

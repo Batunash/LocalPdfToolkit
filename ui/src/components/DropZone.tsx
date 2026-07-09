@@ -153,7 +153,7 @@ export const DropZone: React.FC<DropZoneProps> = ({
       const paths = await tauriAdapter.selectFile(acceptExtensions, multiple);
       if (paths) {
         const fileArray = Array.isArray(paths) ? paths : [paths];
-        const selectedFiles: SelectedFile[] = await Promise.all(
+        const enrichedFiles: SelectedFile[] = await Promise.all(
           fileArray.map(async (filePath) => {
             const name = filePath.split(/[\\/]/).pop() || 'document.pdf';
             let pages = undefined;
@@ -170,7 +170,7 @@ export const DropZone: React.FC<DropZoneProps> = ({
             return { name, path: filePath, size, pages };
           })
         );
-        onFilesSelected(selectedFiles);
+        onFilesSelected(enrichedFiles);
       }
     } catch (err) {
       console.error('Error selecting file:', err);
