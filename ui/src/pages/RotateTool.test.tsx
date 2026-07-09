@@ -44,7 +44,7 @@ describe('RotateTool', () => {
 
   it('renders correctly and switches rotation angles', async () => {
     vi.mocked(tauriAdapter.selectFile).mockResolvedValue(['/test.pdf']);
-    vi.mocked(tauriAdapter.getPdfInfo).mockResolvedValue({ pages: 10, sizeBytes: 1024 });
+    vi.mocked(tauriAdapter.getPdfInfo).mockResolvedValue({ pages: 10, sizeBytes: 1024, isEncrypted: false });
 
     render(<RotateTool onBack={mockOnBack} />);
     
@@ -65,7 +65,7 @@ describe('RotateTool', () => {
 
   it('calls handleRotate with all pages mode', async () => {
     vi.mocked(tauriAdapter.selectFile).mockResolvedValue(['/test.pdf']);
-    vi.mocked(tauriAdapter.getPdfInfo).mockResolvedValue({ pages: 10, sizeBytes: 1024 });
+    vi.mocked(tauriAdapter.getPdfInfo).mockResolvedValue({ pages: 10, sizeBytes: 1024, isEncrypted: false });
     vi.mocked(tauriAdapter.getTempDir).mockResolvedValue('/temp');
     vi.mocked(tauriAdapter.rotate).mockResolvedValue('/temp/rotated_123.pdf');
 
@@ -96,7 +96,7 @@ describe('RotateTool', () => {
 
   it('calls handleRotate with custom pages mode and valid ranges', async () => {
     vi.mocked(tauriAdapter.selectFile).mockResolvedValue(['/test.pdf']);
-    vi.mocked(tauriAdapter.getPdfInfo).mockResolvedValue({ pages: 10, sizeBytes: 1024 });
+    vi.mocked(tauriAdapter.getPdfInfo).mockResolvedValue({ pages: 10, sizeBytes: 1024, isEncrypted: false });
     vi.mocked(tauriAdapter.getTempDir).mockResolvedValue('/temp');
     vi.mocked(tauriAdapter.rotate).mockResolvedValue('/temp/rotated_123.pdf');
 
@@ -136,7 +136,7 @@ describe('RotateTool', () => {
 
   it('handles empty pageRangesStr gracefully', async () => {
     vi.mocked(tauriAdapter.selectFile).mockResolvedValue(['/test.pdf']);
-    vi.mocked(tauriAdapter.getPdfInfo).mockResolvedValue({ pages: 10, sizeBytes: 1024 });
+    vi.mocked(tauriAdapter.getPdfInfo).mockResolvedValue({ pages: 10, sizeBytes: 1024, isEncrypted: false });
     vi.mocked(tauriAdapter.getTempDir).mockResolvedValue('/temp');
     vi.mocked(tauriAdapter.rotate).mockResolvedValue('/temp/rotated_123.pdf');
 
@@ -171,7 +171,7 @@ describe('RotateTool', () => {
 
   it('handles invalid ranges in handleRotate gracefully', async () => {
     vi.mocked(tauriAdapter.selectFile).mockResolvedValue(['/test.pdf']);
-    vi.mocked(tauriAdapter.getPdfInfo).mockResolvedValue({ pages: 10, sizeBytes: 1024 });
+    vi.mocked(tauriAdapter.getPdfInfo).mockResolvedValue({ pages: 10, sizeBytes: 1024, isEncrypted: false });
     vi.mocked(tauriAdapter.getTempDir).mockResolvedValue('/temp');
     vi.mocked(tauriAdapter.rotate).mockResolvedValue('/temp/rotated_123.pdf');
 

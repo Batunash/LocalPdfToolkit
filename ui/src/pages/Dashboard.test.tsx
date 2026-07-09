@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { Dashboard } from './Dashboard';
-import { TOOLS, CATEGORIES } from '../config/tools';
+import { CATEGORIES } from '../config/tools';
 
 vi.mock('../i18n', () => ({
   useTranslation: () => ({

@@ -28,7 +28,7 @@ describe('ConvertTool', () => {
 
   it('renders correctly for PDF input and switches formats', async () => {
     vi.mocked(tauriAdapter.selectFile).mockResolvedValue(['/test.pdf']);
-    vi.mocked(tauriAdapter.getPdfInfo).mockResolvedValue({ pages: 10, sizeBytes: 1024 });
+    vi.mocked(tauriAdapter.getPdfInfo).mockResolvedValue({ pages: 10, sizeBytes: 1024, isEncrypted: false });
 
     render(<ConvertTool onBack={mockOnBack} />);
     
@@ -64,7 +64,7 @@ describe('ConvertTool', () => {
 
   it('renders correctly for non-PDF input', async () => {
     vi.mocked(tauriAdapter.selectFile).mockResolvedValue(['/test.docx']);
-    vi.mocked(tauriAdapter.getPdfInfo).mockResolvedValue({ pages: 10, sizeBytes: 1024 });
+    vi.mocked(tauriAdapter.getPdfInfo).mockResolvedValue({ pages: 10, sizeBytes: 1024, isEncrypted: false });
 
     render(<ConvertTool onBack={mockOnBack} />);
     
@@ -83,7 +83,7 @@ describe('ConvertTool', () => {
 
   it('calls handleConvert with PDF input and jpg format', async () => {
     vi.mocked(tauriAdapter.selectFile).mockResolvedValue(['/test.pdf']);
-    vi.mocked(tauriAdapter.getPdfInfo).mockResolvedValue({ pages: 10, sizeBytes: 1024 });
+    vi.mocked(tauriAdapter.getPdfInfo).mockResolvedValue({ pages: 10, sizeBytes: 1024, isEncrypted: false });
     vi.mocked(tauriAdapter.getTempDir).mockResolvedValue('/temp');
     vi.mocked(tauriAdapter.convert).mockResolvedValue('/temp/converted_123.jpg');
 
@@ -120,7 +120,7 @@ describe('ConvertTool', () => {
 
   it('calls handleConvert with non-PDF input', async () => {
     vi.mocked(tauriAdapter.selectFile).mockResolvedValue(['/test.docx']);
-    vi.mocked(tauriAdapter.getPdfInfo).mockResolvedValue({ pages: 10, sizeBytes: 1024 });
+    vi.mocked(tauriAdapter.getPdfInfo).mockResolvedValue({ pages: 10, sizeBytes: 1024, isEncrypted: false });
     vi.mocked(tauriAdapter.getTempDir).mockResolvedValue('/temp');
     vi.mocked(tauriAdapter.convert).mockResolvedValue('/temp/converted_123.pdf');
 

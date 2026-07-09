@@ -42,7 +42,7 @@ describe('SplitTool', () => {
 
   it('renders correctly and switches modes', async () => {
     vi.mocked(tauriAdapter.selectFile).mockResolvedValue(['/test.pdf']);
-    vi.mocked(tauriAdapter.getPdfInfo).mockResolvedValue({ pages: 10, sizeBytes: 1024 });
+    vi.mocked(tauriAdapter.getPdfInfo).mockResolvedValue({ pages: 10, sizeBytes: 1024, isEncrypted: false });
 
     render(<SplitTool onBack={mockOnBack} />);
     
@@ -84,7 +84,7 @@ describe('SplitTool', () => {
 
   it('calls handleSplit with by_every mode', async () => {
     vi.mocked(tauriAdapter.selectFile).mockResolvedValue(['/test.pdf']);
-    vi.mocked(tauriAdapter.getPdfInfo).mockResolvedValue({ pages: 10, sizeBytes: 1024 });
+    vi.mocked(tauriAdapter.getPdfInfo).mockResolvedValue({ pages: 10, sizeBytes: 1024, isEncrypted: false });
     vi.mocked(tauriAdapter.getTempDir).mockResolvedValue('/temp');
     vi.mocked(tauriAdapter.split).mockResolvedValue(['/temp/split_123/part1.pdf']);
 
@@ -118,7 +118,7 @@ describe('SplitTool', () => {
 
   it('calls handleSplit with by_ranges mode', async () => {
     vi.mocked(tauriAdapter.selectFile).mockResolvedValue(['/test.pdf']);
-    vi.mocked(tauriAdapter.getPdfInfo).mockResolvedValue({ pages: 10, sizeBytes: 1024 });
+    vi.mocked(tauriAdapter.getPdfInfo).mockResolvedValue({ pages: 10, sizeBytes: 1024, isEncrypted: false });
     vi.mocked(tauriAdapter.getTempDir).mockResolvedValue('/temp');
     vi.mocked(tauriAdapter.split).mockResolvedValue(['/temp/split_123/part1.pdf']);
 
@@ -152,7 +152,7 @@ describe('SplitTool', () => {
 
   it('handles invalid nPages input gracefully', async () => {
     vi.mocked(tauriAdapter.selectFile).mockResolvedValue(['/test.pdf']);
-    vi.mocked(tauriAdapter.getPdfInfo).mockResolvedValue({ pages: 10, sizeBytes: 1024 });
+    vi.mocked(tauriAdapter.getPdfInfo).mockResolvedValue({ pages: 10, sizeBytes: 1024, isEncrypted: false });
 
     render(<SplitTool onBack={mockOnBack} />);
     

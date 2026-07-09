@@ -28,7 +28,7 @@ describe('CompressTool', () => {
 
   it('renders correctly', async () => {
     vi.mocked(tauriAdapter.selectFile).mockResolvedValue(['/test.pdf']);
-    vi.mocked(tauriAdapter.getPdfInfo).mockResolvedValue({ pages: 1, sizeBytes: 1024 });
+    vi.mocked(tauriAdapter.getPdfInfo).mockResolvedValue({ pages: 1, sizeBytes: 1024, isEncrypted: false });
 
     render(<CompressTool onBack={mockOnBack} />);
     
@@ -51,7 +51,7 @@ describe('CompressTool', () => {
 
   it('changes compression level when clicked', async () => {
     vi.mocked(tauriAdapter.selectFile).mockResolvedValue(['/test.pdf']);
-    vi.mocked(tauriAdapter.getPdfInfo).mockResolvedValue({ pages: 1, sizeBytes: 1024 });
+    vi.mocked(tauriAdapter.getPdfInfo).mockResolvedValue({ pages: 1, sizeBytes: 1024, isEncrypted: false });
 
     render(<CompressTool onBack={mockOnBack} />);
 
@@ -80,7 +80,7 @@ describe('CompressTool', () => {
 
   it('calls handleCompress and uses tauriAdapter correctly', async () => {
     vi.mocked(tauriAdapter.selectFile).mockResolvedValue(['/test.pdf']);
-    vi.mocked(tauriAdapter.getPdfInfo).mockResolvedValue({ pages: 1, sizeBytes: 1024 });
+    vi.mocked(tauriAdapter.getPdfInfo).mockResolvedValue({ pages: 1, sizeBytes: 1024, isEncrypted: false });
     vi.mocked(tauriAdapter.getTempDir).mockResolvedValue('/temp');
     vi.mocked(tauriAdapter.compress).mockResolvedValue('/temp/compressed_123.pdf');
 
@@ -110,7 +110,7 @@ describe('CompressTool', () => {
 
   it('uses different compression level in handleCompress', async () => {
     vi.mocked(tauriAdapter.selectFile).mockResolvedValue(['/test.pdf']);
-    vi.mocked(tauriAdapter.getPdfInfo).mockResolvedValue({ pages: 1, sizeBytes: 1024 });
+    vi.mocked(tauriAdapter.getPdfInfo).mockResolvedValue({ pages: 1, sizeBytes: 1024, isEncrypted: false });
     vi.mocked(tauriAdapter.getTempDir).mockResolvedValue('/temp');
     vi.mocked(tauriAdapter.compress).mockResolvedValue('/temp/compressed_123.pdf');
 

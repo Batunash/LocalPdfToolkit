@@ -135,7 +135,7 @@ describe('InfoTool', () => {
     });
 
     // Cleanup
-    resolvePromise({ pages: 1, sizeBytes: 1024 });
+    resolvePromise({ pages: 1, sizeBytes: 1024, isEncrypted: false });
   });
 
   it('handles errors when retrieving metadata with empty string error', async () => {

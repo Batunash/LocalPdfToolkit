@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ToolWrapper } from './ToolWrapper';
@@ -118,8 +117,8 @@ describe('ToolWrapper', () => {
 
   it('processes files and shows success screen', async () => {
     let resolveRun: any;
-    mockOnRun.mockImplementation((files, setProgress) => {
-      setProgress(50, 'Halfway');
+    mockOnRun.mockImplementation((_files, _setProgress) => {
+      _setProgress(50, 'Halfway');
       return new Promise(resolve => { resolveRun = resolve; });
     });
 
@@ -273,7 +272,7 @@ describe('ToolWrapper', () => {
   });
 
   it('renders optionsPanel as a function', () => {
-    const optionsPanel = vi.fn((files: SelectedFile[], setFiles: any) => (
+    const optionsPanel = vi.fn((files: SelectedFile[], _setFiles: any) => (
       <div data-testid="custom-options">Options for {files.length}</div>
     ));
 
@@ -296,7 +295,7 @@ describe('ToolWrapper', () => {
 
   it('handles addMore in multipleFiles mode', async () => {
     vi.mocked(tauriAdapter.selectFile).mockResolvedValue(['/new1.pdf', '/new2.pdf']);
-    vi.mocked(tauriAdapter.getPdfInfo).mockResolvedValue({ pages: 5, sizeBytes: 5000 });
+    vi.mocked(tauriAdapter.getPdfInfo).mockResolvedValue({ pages: 5, sizeBytes: 5000, isEncrypted: false });
 
     render(
       <ToolWrapper
@@ -379,7 +378,7 @@ describe('ToolWrapper', () => {
   
   it('formats size correctly for non-zero bytes', async () => {
     vi.mocked(tauriAdapter.selectFile).mockResolvedValue(['/nonzero.pdf']);
-    vi.mocked(tauriAdapter.getPdfInfo).mockResolvedValue({ pages: 1, sizeBytes: 2048 });
+    vi.mocked(tauriAdapter.getPdfInfo).mockResolvedValue({ pages: 1, sizeBytes: 2048, isEncrypted: false });
 
     render(
       <ToolWrapper
@@ -405,7 +404,7 @@ describe('ToolWrapper', () => {
 
   it('processes files and shows array output path correctly', async () => {
     let resolveRun: any;
-    mockOnRun.mockImplementation((files, setProgress) => {
+    mockOnRun.mockImplementation((_files, _setProgress) => {
       return new Promise(resolve => { resolveRun = resolve; });
     });
 
@@ -449,10 +448,10 @@ describe('ToolWrapper', () => {
 
   it('formats size correctly', async () => {
     // 0 bytes formatting test logic via Dropzone file
-    const mockOnFilesSelected = vi.fn();
+    
     
     vi.mocked(tauriAdapter.selectFile).mockResolvedValue(['/zero.pdf']);
-    vi.mocked(tauriAdapter.getPdfInfo).mockResolvedValue({ pages: 1, sizeBytes: 0 });
+    vi.mocked(tauriAdapter.getPdfInfo).mockResolvedValue({ pages: 1, sizeBytes: 0, isEncrypted: false });
 
     render(
       <ToolWrapper
@@ -481,7 +480,7 @@ describe('ToolWrapper', () => {
     // 1. Missing msg branch in setProgress
     // 2. Missing output default name branch
     // 3. Missing savePath null branch
-    mockOnRun.mockImplementation(async (files, setProgress) => {
+    mockOnRun.mockImplementation(async (_files, setProgress) => {
       setProgress(50); // no msg
       return '/output/'; // ends with slash so pop() is empty string
     });
@@ -547,7 +546,7 @@ describe('ToolWrapper', () => {
 
   it('covers missing branch in addMore default name fallback', async () => {
     vi.mocked(tauriAdapter.selectFile).mockResolvedValue(['/newpath/']);
-    vi.mocked(tauriAdapter.getPdfInfo).mockResolvedValue({ pages: 1, sizeBytes: 1000 });
+    vi.mocked(tauriAdapter.getPdfInfo).mockResolvedValue({ pages: 1, sizeBytes: 1000, isEncrypted: false });
 
     render(
       <ToolWrapper

@@ -44,7 +44,7 @@ describe('MergeTool', () => {
 
   it('calls handleMerge and uses tauriAdapter correctly', async () => {
     vi.mocked(tauriAdapter.selectFile).mockResolvedValue(['/test1.pdf', '/test2.pdf']);
-    vi.mocked(tauriAdapter.getPdfInfo).mockResolvedValue({ pages: 1, sizeBytes: 1024 });
+    vi.mocked(tauriAdapter.getPdfInfo).mockResolvedValue({ pages: 1, sizeBytes: 1024, isEncrypted: false });
     vi.mocked(tauriAdapter.getTempDir).mockResolvedValue('/temp');
     vi.mocked(tauriAdapter.merge).mockResolvedValue('/temp/merged_123.pdf');
 
@@ -75,7 +75,7 @@ describe('MergeTool', () => {
 
   it('calls onReorder inside optionsPanel', async () => {
     vi.mocked(tauriAdapter.selectFile).mockResolvedValue(['/test1.pdf']);
-    vi.mocked(tauriAdapter.getPdfInfo).mockResolvedValue({ pages: 1, sizeBytes: 1024 });
+    vi.mocked(tauriAdapter.getPdfInfo).mockResolvedValue({ pages: 1, sizeBytes: 1024, isEncrypted: false });
 
     render(<MergeTool onBack={mockOnBack} />);
 

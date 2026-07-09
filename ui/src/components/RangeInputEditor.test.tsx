@@ -1,7 +1,7 @@
-import React from 'react';
-import { render, screen, act, fireEvent } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
-import { RangeInputEditor, PageRange } from './RangeInputEditor';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import { RangeInputEditor } from './RangeInputEditor';
+import type { PageRange } from './RangeInputEditor';
 
 describe('RangeInputEditor', () => {
   const mockOnChange = vi.fn();
@@ -24,7 +24,6 @@ describe('RangeInputEditor', () => {
     expect((inputs[1] as HTMLInputElement).value).toBe('5');
     
     // The remove button should be disabled since there's only 1 range
-    const removeBtn = screen.getByRole('button', { name: '' }); 
     // Actually we have two buttons, remove and add. Let's find by generic icon or text.
     const addBtn = screen.getByText('Add Range');
     expect(addBtn).toBeDefined();
