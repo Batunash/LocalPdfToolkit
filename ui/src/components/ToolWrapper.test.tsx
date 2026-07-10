@@ -42,6 +42,8 @@ vi.mock('./BatchDropZone', () => ({
 vi.mock('../adapters/tauriAdapter', () => ({
   tauriAdapter: {
     getSavePath: vi.fn(),
+    selectFolder: vi.fn(),
+    copyFile: vi.fn(),
     selectFile: vi.fn(),
     getPdfInfo: vi.fn()
   }
@@ -54,6 +56,8 @@ describe('ToolWrapper', () => {
   beforeEach(() => {
     mockOnRun.mockResolvedValue('output.pdf');
     vi.mocked(tauriAdapter.getSavePath).mockResolvedValue('/saved/output.pdf');
+    vi.mocked(tauriAdapter.selectFolder).mockResolvedValue('/saved');
+    vi.mocked(tauriAdapter.copyFile).mockResolvedValue();
     
     // Mock window.alert
     vi.spyOn(window, 'alert').mockImplementation(() => {});
@@ -165,6 +169,7 @@ describe('ToolWrapper', () => {
     
     await waitFor(() => {
       expect(tauriAdapter.getSavePath).toHaveBeenCalledWith('result.pdf');
+      expect(tauriAdapter.copyFile).toHaveBeenCalledWith('/output/result.pdf', '/saved/output.pdf');
       expect(window.alert).toHaveBeenCalledWith('common.savedSuccess/saved/output.pdf');
     });
   });
@@ -442,7 +447,10 @@ describe('ToolWrapper', () => {
     fireEvent.click(saveBtn);
     
     await waitFor(() => {
-      expect(tauriAdapter.getSavePath).toHaveBeenCalledWith('part1.pdf');
+      expect(tauriAdapter.selectFolder).toHaveBeenCalled();
+      expect(tauriAdapter.copyFile).toHaveBeenCalledWith('/output/part1.pdf', '/saved/part1.pdf');
+      expect(tauriAdapter.copyFile).toHaveBeenCalledWith('/output/part2.pdf', '/saved/part2.pdf');
+      expect(window.alert).toHaveBeenCalledWith('common.savedSuccess/saved');
     });
   });
 
