@@ -32,36 +32,13 @@ pub fn run(
     let pages_to_keep = page_count - pages_to_remove.len();
     progress(Progress::new(20.0, format!("Keeping {} of {} pages", pages_to_keep, page_count), "remove_pages"));
 
-    // Create a new document with only the pages to keep
-    let mut output_doc = Document::with_version("1.7");
-    let source_pages = source_doc.get_pages();
-    let mut page_refs: Vec<lopdf::Object> = Vec::new();
-
-    for (page_num, page_obj_id) in &source_pages {
-        if !pages_to_remove.contains(page_num)
-            && let Ok(page_obj) = source_doc.get_object(*page_obj_id) {
-                let new_id = output_doc.new_object_id();
-                let new_page = page_obj.clone();
-                output_doc.objects.insert(new_id, new_page);
-                page_refs.push(lopdf::Object::Reference(new_id));
-            }
-    }
-
-    // Create Pages dictionary
-    let mut pages_dict = lopdf::Dictionary::new();
-    pages_dict.set(b"Type", lopdf::Object::Name(b"Pages".to_vec()));
-    pages_dict.set(b"Kids", lopdf::Object::Array(page_refs.clone()));
-    pages_dict.set(b"Count", lopdf::Object::Integer(page_refs.len() as i64));
-
-    let pages_id = output_doc.add_object(pages_dict);
-
-    // Create Catalog
-    let mut catalog = lopdf::Dictionary::new();
-    catalog.set(b"Type", lopdf::Object::Name(b"Catalog".to_vec()));
-    catalog.set(b"Pages", lopdf::Object::Reference(pages_id));
-
-    let catalog_id = output_doc.add_object(catalog);
-    output_doc.trailer.set(b"Root", lopdf::Object::Reference(catalog_id));
+    let mut output_doc = source_doc.clone();
+    
+    // lopdf's delete_pages expects a slice of page numbers (1-indexed)
+    let pages_to_remove_vec: Vec<u32> = pages_to_remove.into_iter().collect();
+    output_doc.delete_pages(&pages_to_remove_vec);
+    // Optionally prune unused objects
+    output_doc.prune_objects();
 
     progress(Progress::new(80.0, "Saving output...", "remove_pages"));
 
@@ -86,7 +63,7 @@ pub fn run(
         file_size,
         processing_time,
     )
-    .with_page_count(page_refs.len() as u32))
+    .with_page_count(pages_to_keep as u32))
 }
 
 #[cfg(test)]

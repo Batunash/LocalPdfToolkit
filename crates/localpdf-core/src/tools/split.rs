@@ -143,49 +143,26 @@ fn extract_page_range(
     output_path: &Path,
     start_page: u32,
     end_page: u32,
-    _total_pages: usize,
+    total_pages: usize,
     progress: &dyn Fn(Progress),
 ) -> Result<JobOutput, LpError> {
     let start = std::time::Instant::now();
 
     progress(Progress::new(0.0, "Extracting pages...", "extract"));
 
-    // Create a new document
-    let mut output_doc = Document::with_version("1.7");
+    let mut output_doc = source_doc.clone();
+    let mut pages_to_delete = Vec::new();
 
-    // Get page IDs from source (returns BTreeMap<u32, ObjectId>)
-    let source_pages = source_doc.get_pages();
-
-    // Collect page references for the range
-    let mut page_refs: Vec<lopdf::Object> = Vec::new();
-    let mut page_count = 0;
-
-    for page_num in start_page..=end_page {
-        if let Some(&page_obj_id) = source_pages.get(&page_num)
-            && let Ok(page_obj) = source_doc.get_object(page_obj_id) {
-                let new_id = output_doc.new_object_id();
-                let new_page = page_obj.clone();
-                output_doc.objects.insert(new_id, new_page);
-                page_refs.push(lopdf::Object::Reference(new_id));
-                page_count += 1;
-            }
+    for p in 1..=(total_pages as u32) {
+        if p < start_page || p > end_page {
+            pages_to_delete.push(p);
+        }
     }
 
-    // Create Pages object with appropriate type
-    let mut pages_dict = lopdf::Dictionary::new();
-    pages_dict.set(b"Type", lopdf::Object::Name(b"Pages".to_vec()));
-    pages_dict.set(b"Kids", lopdf::Object::Array(page_refs));
-    pages_dict.set(b"Count", lopdf::Object::Integer(page_count as i64));
+    output_doc.delete_pages(&pages_to_delete);
+    output_doc.prune_objects();
 
-    let pages_id = output_doc.add_object(pages_dict);
-
-    // Create Catalog
-    let mut catalog = lopdf::Dictionary::new();
-    catalog.set(b"Type", lopdf::Object::Name(b"Catalog".to_vec()));
-    catalog.set(b"Pages", lopdf::Object::Reference(pages_id));
-
-    let catalog_id = output_doc.add_object(catalog);
-    output_doc.trailer.set(b"Root", lopdf::Object::Reference(catalog_id));
+    let page_count = end_page.saturating_sub(start_page) + 1;
 
     // Ensure output directory exists
     if let Some(parent) = output_path.parent() {

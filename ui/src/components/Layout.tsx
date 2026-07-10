@@ -4,7 +4,6 @@ import type { PageId } from '../types';
 import { TOOLS } from '../config/tools';
 import { tauriAdapter } from '../adapters/tauriAdapter';
 import { useTranslation } from '../i18n';
-import type { Language } from '../i18n';
 import { CommandPalette } from './CommandPalette';
 import { SettingsDrawer } from './SettingsDrawer';
 
@@ -34,7 +33,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activePage, onNavigate
     return (saved === 'light' || saved === 'dark') ? saved : 'dark';
   });
 
-  const { language, setLanguage, t } = useTranslation();
+  const { t } = useTranslation();
 
   useEffect(() => {
     tauriAdapter.appVersion().then(setAppVersion);
@@ -56,11 +55,6 @@ export const Layout: React.FC<LayoutProps> = ({ children, activePage, onNavigate
     const next = theme === 'dark' ? 'light' : 'dark';
     setTheme(next);
     localStorage.setItem('localpdf_theme', next);
-  };
-
-  const toggleLanguage = () => {
-    const next: Language = language === 'en' ? 'tr' : 'en';
-    setLanguage(next);
   };
 
   const handleCleanTemp = async () => {
@@ -216,24 +210,17 @@ export const Layout: React.FC<LayoutProps> = ({ children, activePage, onNavigate
           <div className={`flex items-center justify-between gap-2 ${sidebarCollapsed ? 'flex-col' : 'flex-row'}`}>
             <button
               onClick={toggleTheme}
-              title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-              className="p-2 rounded-lg border border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-850 cursor-pointer flex items-center justify-center flex-1"
+              title="Toggle Theme"
+              className="p-1.5 rounded-lg text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-850 transition-colors flex-1 flex justify-center cursor-pointer"
             >
-              {theme === 'dark' ? <Icons.Sun className="w-3.5 h-3.5" /> : <Icons.Moon className="w-3.5 h-3.5" />}
+              {theme === 'dark' ? <Icons.Sun className="w-4 h-4" /> : <Icons.Moon className="w-4 h-4" />}
             </button>
             <button
               onClick={() => setSettingsOpen(true)}
               title="Settings"
-              className="p-2 rounded-lg border border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-850 cursor-pointer flex items-center justify-center flex-1"
+              className="p-1.5 rounded-lg text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-850 transition-colors flex-1 flex justify-center cursor-pointer"
             >
               <Icons.Settings className="w-3.5 h-3.5" />
-            </button>
-            <button
-              onClick={toggleLanguage}
-              title="Switch Language"
-              className="px-2 py-1 text-[10px] font-bold uppercase rounded-lg border border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-850 cursor-pointer flex-1 text-center"
-            >
-              {language === 'en' ? 'EN' : 'TR'}
             </button>
           </div>
 

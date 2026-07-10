@@ -89,12 +89,25 @@ export const ToolWrapper: React.FC<ToolWrapperProps> = ({
     if (!outputFilePath) return;
 
     try {
-      const singlePath = Array.isArray(outputFilePath) ? outputFilePath[0] : outputFilePath;
-      const defaultName = singlePath.split(/[\\/]/).pop() || `processed_${toolId}.pdf`;
-      const savePath = await tauriAdapter.getSavePath(defaultName);
+      if (Array.isArray(outputFilePath)) {
+        const folder = await tauriAdapter.selectFolder();
+        if (folder) {
+          for (const file of outputFilePath) {
+            const fileName = file.split(/[\\/]/).pop() || `processed_${Date.now()}.pdf`;
+            // Using basic path join that works on Windows/Unix
+            const separator = folder.includes('\\') ? '\\' : '/';
+            await tauriAdapter.copyFile(file, `${folder}${separator}${fileName}`);
+          }
+          alert(t('common.savedSuccess') + folder);
+        }
+      } else {
+        const defaultName = outputFilePath.split(/[\\/]/).pop() || `processed_${toolId}.pdf`;
+        const savePath = await tauriAdapter.getSavePath(defaultName);
 
-      if (savePath) {
-        alert(t('common.savedSuccess') + savePath);
+        if (savePath) {
+          await tauriAdapter.copyFile(outputFilePath, savePath);
+          alert(t('common.savedSuccess') + savePath);
+        }
       }
     } catch (err: any) {
       alert('Error saving file: ' + err.toString());

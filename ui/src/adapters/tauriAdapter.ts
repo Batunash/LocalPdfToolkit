@@ -134,7 +134,14 @@ export const tauriAdapter = {
     return 14;
   },
 
-  readFile: async (filePath: string): Promise<Uint8Array> => {
+  copyFile: async (source: string, destination: string): Promise<void> => {
+      if (checkIsTauri()) {
+        const { copyFile } = await import('@tauri-apps/plugin-fs');
+        await copyFile(source, destination);
+      }
+    },
+
+    readFile: async (filePath: string): Promise<Uint8Array> => {
     if (checkIsTauri()) {
       const { readFile } = await import('@tauri-apps/plugin-fs');
       return await readFile(filePath);
