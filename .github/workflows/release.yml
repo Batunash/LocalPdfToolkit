@@ -57,6 +57,14 @@ jobs:
       - name: Run Rust tests
         run: cargo test --workspace
 
+      - name: Update Version
+        shell: bash
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          echo "Setting version to $VERSION"
+          sed -i.bak -e "s/\"version\": \".*\"/\"version\": \"$VERSION\"/" crates/localpdf-app/tauri.conf.json
+          rm crates/localpdf-app/tauri.conf.json.bak
+
       - name: Build Tauri app and upload to Github Release
         uses: tauri-apps/tauri-action@v0
         env:
